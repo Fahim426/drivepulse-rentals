@@ -1,0 +1,364 @@
+# DrivePulse Car Rental Management System
+## Complete System Architecture, Operational Workflow & Technical Guide
+
+---
+
+## 1. Executive Summary & System Overview
+
+**DrivePulse** is a production-grade, full-stack Car Rental Management web application engineered specifically for **internal administrative and operational staff** of a car rental business. It manages the entire lifecycle of rental operations—from vehicle onboarding and compliance tracking to customer onboarding, negotiated booking dispatch, digital vehicle inspections, payments, GST invoicing, and executive analytics.
+
+### Key Business Model & Operational Principles:
+1. **Admin Staff Only**: Not a public marketplace; designed strictly for internal staff (Super Admins, Operations Managers, and Counter Staff) with strict Role-Based Access Control (RBAC).
+2. **Dynamic / Negotiated Rental Pricing**: Vehicles do not enforce rigid, fixed daily tariffs. Instead, tariffs are negotiated manually with customers based on **passenger count**, route, and duration.
+3. **Frictionless Customer Walk-ins**: Counter staff can book rentals immediately by manually typing customer details on the fly or selecting pre-registered customers from the directory.
+4. **Zero Odometer Clutter**: Odometer readings are captured only during physical dispatch and return inspections, eliminating maintenance clutter from general fleet overview views.
+5. **Strict Road Legality & Safety Compliance**: Vehicles cannot be assigned to bookings if mandatory compliance documents (**Insurance**, **Fitness**, or **PUC**) are expired, unless explicitly overridden with documented justification by an authorized Manager.
+6. **Statutory Indian GST Compliance**: Native support for **18% GST** (split into 9% CGST and 9% SGST), HSN/SAC code **996601** (Rental services of passenger vehicles), and official downloadable PDF tax invoices and receipts.
+
+---
+
+## 2. Technology Stack & System Architecture
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        FRONTEND CLIENT (SPA)                           │
+│  React 18 + Vite + TypeScript + Tailwind CSS + Lucide Icons + TanStack  │
+│                   Port: http://localhost:3000                           │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ HTTP / JSON API (JWT via httpOnly)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                        BACKEND API SERVER                              │
+│       Node.js + Express + TypeScript + Zod Validation + Helmet         │
+│                   Port: http://localhost:5000/api                       │
+└──────────────┬────────────────────┬────────────────────┬───────────────┘
+               │                    │                    │
+               ▼                    ▼                    ▼
+     ┌───────────────────┐┌──────────────────┐┌───────────────────┐
+     │    PRISMA ORM     ││ STORAGE ENGINE   ││  PDF ENGINE       │
+     │ SQLite (local dev)││ Local /uploads   ││ PDFKit            │
+     │ Postgres (prod)   ││ S3-ready adapt.  ││ Invoices/Receipts │
+     └───────────────────┘└──────────────────┘└───────────────────┘
+```
+
+### Technology Breakdown:
+* **Frontend**:
+  * **Framework**: React 18 with Vite build tool and strict TypeScript.
+  * **Styling**: Tailwind CSS with custom glassmorphism design system and full light/dark mode support.
+  * **Routing**: React Router v6 with authenticated route guards and role-based redirect protection.
+  * **State & Forms**: Context API (`AuthContext`), React Hook Form, and Zod client validation.
+  * **UI Components**: Toast notifications, interactive modals, responsive data tables, and dynamic quotation cards.
+* **Backend**:
+  * **Runtime & Framework**: Node.js with Express and TypeScript.
+  * **Security**: Helmet headers, CORS credentials whitelist, express-rate-limit, bcrypt password hashing.
+  * **Authentication**: Dual JWT tokens (short-lived access tokens and refresh tokens) stored in secure `httpOnly` cookies.
+  * **Validation**: Centralized Zod request body, query, and parameter middleware.
+  * **File Storage**: Modular storage abstraction defaulting to local `/uploads` directory with clean S3 swappability.
+  * **Document Generation**: PDFKit vector engine generating official rental agreements, GST tax invoices, and payment receipts.
+* **Database & Persistence**:
+  * **ORM**: Prisma ORM with 18 relational models.
+  * **Engines**: SQLite for instant zero-dependency local development; 1-click switch to PostgreSQL for enterprise production.
+
+---
+
+## 3. End-to-End Operational Workflows
+
+### Flow 1: Staff Authentication & Session Lifecycle
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Staff as Staff / Admin
+    participant UI as DrivePulse Client
+    participant API as Express Auth API
+    participant DB as Prisma Database
+
+    Staff->>UI: Enter email & password
+    UI->>API: POST /api/auth/login { email, password }
+    API->>DB: Query User by email
+    DB-->>API: User record (bcrypt hash, role)
+    API->>API: Compare password hash
+    alt Credentials Valid
+        API->>API: Generate Access Token (15m) & Refresh Token (7d)
+        API->>UI: HTTP 200 + Set httpOnly Cookies
+        UI->>UI: Store user profile in AuthContext
+        UI-->>Staff: Redirect to Dashboard
+    else Invalid Password
+        API-->>UI: HTTP 401 Unauthorized
+        UI-->>Staff: Display error banner
+    end
+```
+
+#### Roles & Permissions Matrix:
+| Capability / Feature | Super Admin | Operations Manager | Counter Staff |
+| :--- | :---: | :---: | :---: |
+| View Dashboard & Fleet Summary | Yes | Yes | Yes |
+| Create & Dispatch Bookings | Yes | Yes | Yes |
+| Record Inspections & Signatures | Yes | Yes | Yes |
+| Collect Advance & Balance Payments | Yes | Yes | Yes |
+| Enter Customers Manually | Yes | Yes | Yes |
+| Authorize Compliance Document Override | Yes | Yes | **Blocked** |
+| Bypass Outstanding Balance at Handover | Yes | Yes | **Blocked** |
+| Add / Edit / Deactivate Fleet Vehicles | Yes | Yes | **Blocked** |
+| Upload & Renew Vehicle Compliance Docs | Yes | Yes | **Blocked** |
+| Blacklist / Unblacklist Customers | Yes | Yes | **Blocked** |
+| System Settings & Tariff Rules | Yes | **Read-only** | **Blocked** |
+| Staff User Management (`/users`) | Yes | **Blocked** | **Blocked** |
+| Security Audit Trail Logs (`/audit`) | Yes | **Blocked** | **Blocked** |
+
+---
+
+### Flow 2: Vehicle Fleet & Compliance Document Verification
+Every vehicle in DrivePulse undergoes continuous compliance monitoring across mandatory legal certificates:
+* **INSURANCE** (Comprehensive / Zero-Depreciation / Third-Party)
+* **FITNESS** (Commercial Vehicle Fitness Certificate)
+* **PUC** (Pollution Under Control Certificate)
+* **RC** (Registration Certificate)
+* **ROAD TAX** & **PERMIT**
+
+#### Compliance Gating Logic:
+```mermaid
+flowchart TD
+    Start([Booking Creation Initiated]) --> FetchCandidate[Fetch Available Vehicles for Dates]
+    FetchCandidate --> CheckDocs{Mandatory Docs Valid?\nInsurance, Fitness, PUC}
+    CheckDocs -- All Valid --> AllowBooking[Vehicle Available for Booking]
+    CheckDocs -- One or More Expired --> FlagBlocked[Mark as Compliance Blocked]
+    FlagBlocked --> CheckUserRole{User Role?}
+    CheckUserRole -- STAFF --> BlockStaff[Staff Blocked: Cannot Assign Vehicle]
+    CheckUserRole -- MANAGER / SUPER_ADMIN --> RequireOverride[Require Manager Override Checkbox\n+ Documented Override Justification]
+    RequireOverride --> OverrideProvided{Reason >= 5 chars?}
+    OverrideProvided -- Yes --> LogAudit[Log Security Audit Trail\nProceed with Booking]
+    OverrideProvided -- No --> BlockManager[Validation Error: Reason Required]
+```
+
+---
+
+### Flow 3: Customer Walk-in & Manual Booking Dispatch
+When a customer arrives at the counter or calls over the phone:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor CounterStaff as Counter Staff
+    participant BookingUI as CreateBookingPage
+    participant API as Booking Controller
+    participant DB as Prisma Database
+
+    CounterStaff->>BookingUI: Toggle "Enter Manually"
+    CounterStaff->>BookingUI: Input Full Name, Phone, DL (Optional), City
+    CounterStaff->>BookingUI: Select Pickup & Return Window
+    BookingUI->>API: GET /api/bookings/available-vehicles?dates...
+    API->>DB: Query non-overlapping & compliant vehicles
+    DB-->>BookingUI: Return available vehicles with seat capacity
+    CounterStaff->>BookingUI: Select vehicle (e.g. 7 Seater Innova)
+    CounterStaff->>BookingUI: Enter Agreed Rental Amount (e.g. ₹6,500 based on 6 people)
+    BookingUI->>BookingUI: Live Quotation calculates 18% GST (₹1,170), Net Total (₹7,670)
+    CounterStaff->>BookingUI: Enter Initial Advance Collected (e.g. ₹2,000)
+    CounterStaff->>BookingUI: Click "Confirm & Schedule Booking"
+    BookingUI->>API: POST /api/bookings (Manual Customer + Rent)
+    alt New Customer
+        API->>DB: Auto-create Customer in directory
+    else Existing Phone Match
+        API->>DB: Link existing Customer ID
+    end
+    API->>DB: Create Booking (BK-YYYY-XXXX) + Payment Receipt (REC-YYYY-XXXX)
+    DB-->>API: Booking Confirmed
+    API-->>BookingUI: Return Booking details
+    BookingUI-->>CounterStaff: Redirect to Booking Detail View
+```
+
+---
+
+### Flow 4: Vehicle Pickup & Digital Handover Inspection
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Staff as Counter / Yard Staff
+    actor Customer as Hirer
+    participant UI as PickupInspectionModal
+    participant API as Inspection API
+    participant DB as Database
+    participant PDF as PDF Service
+
+    Staff->>UI: Click "Perform Pickup Inspection"
+    Staff->>UI: Enter current physical odometer & fuel level (0/4 to 4/4)
+    Staff->>UI: Note existing exterior scratches/dents & upload photos
+    Staff->>UI: Verify handed-over accessories (Spare wheel, Fastag, Tool kit)
+    Customer->>UI: Sign on digital touchscreen canvas
+    Staff->>UI: Submit Inspection
+    UI->>API: POST /api/bookings/:id/pickup-inspection
+    API->>DB: Store InspectionChecklist (type: PICKUP)
+    API->>DB: Update Booking status -> PICKED_UP
+    API->>DB: Update Vehicle status -> RENTED
+    API-->>UI: Handover Complete
+    UI->>PDF: Generate signed Rental Agreement PDF
+    PDF-->>Customer: Official Signed Rental Agreement
+```
+
+---
+
+### Flow 5: Vehicle Return, Damage Settlement & Deposit Refund
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Staff as Yard Staff
+    participant UI as ReturnInspectionModal
+    participant API as Inspection API
+    participant DB as Database
+
+    Staff->>UI: Open "Perform Return Inspection"
+    Staff->>UI: Enter return odometer & return fuel level
+    alt Return Odometer < Pickup Odometer
+        UI-->>Staff: Validation Error: Cannot be lower than pickup
+    end
+    Staff->>UI: Inspect for new damages (enter damage charge if any)
+    Staff->>UI: Calculate fuel deficiency charge (if fuel returned lower)
+    Staff->>UI: Assess late return penalty fee (if applicable)
+    Staff->>UI: Customer signs return acknowledgment
+    Staff->>UI: Submit Return Inspection
+    UI->>API: POST /api/bookings/:id/return-inspection
+    API->>DB: Store InspectionChecklist (type: RETURN)
+    API->>DB: Update Booking status -> RETURNED
+    API->>DB: Update Vehicle status -> AVAILABLE
+    API->>DB: Sync Vehicle odometer with return reading
+    API->>UI: Return finalized. Security deposit refund calculated.
+```
+
+---
+
+### Flow 6: Billing, Invoicing & Financial Settlement
+Every rupee through the system is auditable and tracked under formal financial structures:
+1. **Advance Deposit**: Immediately generates an official payment receipt with a unique identifier (`REC-YYYY-XXXX`).
+2. **Balance Collection**: Recorded via UPI, Cash, Card, or Bank Transfer at vehicle handover or return.
+3. **Statutory GST Tax Invoice**:
+   * Issued under SAC Code **996601** (Rental services of passenger vehicles).
+   * Automatically splits 18% GST into **9% CGST** and **9% SGST**.
+   * Generates a tamper-proof PDF Tax Invoice (`INV-YYYY-XXXX`) compliant with Indian GST rules.
+
+---
+
+## 4. Complete Database Relational Schema
+
+```
+┌─────────────┐       1:N       ┌──────────────┐       1:N       ┌─────────────────────┐
+│  Customer   ├────────────────►│   Booking    ├────────────────►│ InspectionChecklist │
+└──────┬──────┘                 └──────┬───────┘                 └─────────────────────┘
+       │ 1:N                           │
+       ▼                               │ 1:N
+┌──────────────┐                       ├────────────────►┌──────────────┐
+│CustomerDoc   │                       │                 │   Payment    │
+└──────────────┘                       │ 1:N             └──────────────┘
+                                       ├────────────────►┌──────────────┐
+┌─────────────┐       1:N              │                 │   Invoice    │
+│   Vehicle   ├────────────────────────┘                 └──────────────┘
+└──────┬──────┘                        │ 1:N
+       │ 1:N                           └────────────────►┌──────────────┐
+       ├────────────────►┌─────────────┐                 │ BookingExtra │
+       │                 │ VehicleDoc  │                 └──────────────┘
+       │ 1:N             └─────────────┘
+       ├────────────────►┌─────────────┐
+       │                 │ Maintenance │
+       │ 1:N             └─────────────┘
+       └────────────────►┌─────────────┐
+                         │   Expense   │
+                         └─────────────┘
+```
+
+### Core Entities:
+1. **User**: Staff credentials, salted password hash, assigned role (`SUPER_ADMIN`, `MANAGER`, `STAFF`), and active session tokens.
+2. **Vehicle**: Make, model, year, registration number, fuel type, transmission, seating capacity, security deposit, status (`AVAILABLE`, `RENTED`, `MAINTENANCE`, `INACTIVE`), and chassis/engine numbers.
+3. **VehicleDocument**: Legal compliance certificates (Insurance, Fitness, PUC, RC, Permit) with issue dates, expiry dates, policy details, and validity status.
+4. **Customer**: Full name, phone, alternate contact, address, KYC verification status, and blacklist status with documented violation reasons.
+5. **CustomerDocument**: Driving licence, Aadhaar, Passport, or Voter ID records with document numbers, verification status, and expiry tracking.
+6. **Booking**: Core operational contract tracking pickup/return dates, locations, assigned vehicle, customer, custom agreed rental tariff, 18% GST tax, total charges, advance paid, balance due, and booking status.
+7. **InspectionChecklist**: Digital condition reports for pickup and return, recording physical odometer, fuel level, scratch/dent notes, photos, accessory checklist, and customer digital signatures.
+8. **Payment**: Payment receipts with transaction references, payment modes (UPI, Cash, Card, NetBanking), payment types (Advance, Balance, Security Deposit, Damage Settlement), and recipient staff ID.
+9. **Invoice**: Statutory GST tax invoice records with unique numbers, CGST/SGST breakdown, and customer GSTIN.
+10. **AuditLog**: Immutably tracks every administrative action, compliance bypass, balance override, and role change with IP addresses and timestamps.
+11. **SystemSetting**: Stores company legal name, GSTIN, PAN, hub addresses, and default business policies.
+
+---
+
+## 5. API Endpoint Catalog
+
+### Authentication (`/api/auth`)
+* `POST /login`: Authenticates staff credentials, issues JWT access and refresh cookies.
+* `POST /logout`: Clears session cookies and revokes tokens.
+* `POST /refresh`: Refreshes expired access tokens using the refresh cookie.
+* `GET  /me`: Returns current authenticated staff user and role.
+
+### Fleet & Vehicles (`/api/vehicles`)
+* `GET    /`: Lists all vehicles with compliance summary and search filters.
+* `POST   /`: Registers a new fleet vehicle (Manager / Super Admin only).
+* `GET    /:id`: Returns full vehicle details, specifications, and document records.
+* `PUT    /:id`: Updates vehicle specifications and details.
+* `DELETE /:id`: Deactivates a vehicle from active fleet.
+* `POST   /:id/documents`: Uploads a new legal compliance document.
+* `POST   /documents/:docId/renew`: Renews an existing compliance certificate.
+* `POST   /:id/maintenance`: Records vehicle servicing or repair.
+* `POST   /:id/expenses`: Logs operating expenses (fuel, tolls, cleaning).
+
+### Bookings & Operations (`/api/bookings`)
+* `GET  /available-vehicles`: Queries available fleet vehicles for a pickup/return window.
+* `GET  /`: Lists bookings with pagination, date filters, and status filters.
+* `POST /`: Creates a booking with manual customer entry or existing customer, custom rent, and overlap checks.
+* `GET  /:id`: Fetches complete booking details, customer, vehicle, checklists, and ledger.
+* `PUT  /:id/status`: Updates booking status (`CONFIRMED`, `PICKED_UP`, `RETURNED`, `CANCELLED`).
+* `POST /:id/extend`: Extends rental duration and recalculates balance due.
+* `GET  /:id/agreement-pdf`: Downloads the signed PDF Rental Agreement.
+* `POST /:bookingId/pickup-inspection`: Records pickup inspection and customer signature.
+* `POST /:bookingId/return-inspection`: Records return condition, damage charges, and deposit refund.
+
+### Payments & Invoices (`/api/payments` & `/api/invoices`)
+* `POST /payments`: Records an advance or balance payment; returns receipt number.
+* `GET  /payments/:id/receipt-pdf`: Downloads the official Payment Receipt PDF.
+* `POST /invoices/generate`: Generates an official GST Tax Invoice.
+* `GET  /invoices/:id/invoice-pdf`: Downloads the official GST Tax Invoice PDF.
+
+### Executive Dashboard & Reports (`/api/dashboard` & `/api/reports`)
+* `GET /dashboard/summary`: Live KPI metrics (total fleet, utilization rate, active rentals, monthly revenue).
+* `GET /reports/revenue`: Financial ledger and transaction logs with revenue trends.
+* `GET /reports/revenue/export-csv`: Streams downloadable CSV spreadsheet of all transactions.
+* `GET /reports/fleet-utilization`: Operating efficiency and rental days per vehicle.
+* `GET /reports/customers`: Customer lifetime value and repeat rental frequency.
+
+---
+
+## 6. Security, Compliance & Data Integrity
+
+1. **Role-Based Middleware (`authorize(...)`)**: Protects administrative endpoints against privilege escalation.
+2. **Double Verification on Sensitive Overrides**: Staff cannot override compliance document warnings; Managers must document justification.
+3. **Double Verification on Pickup Balance**: If a customer has not paid their advance or has an outstanding balance at dispatch, a Manager must approve the release with a documented reason.
+4. **Overlap Prevention**: Double-guarded using both pre-query filters and database transaction locking to prevent double-booking the same vehicle.
+5. **Customer Blacklist Guard**: Blocks bookings immediately if the customer's phone number matches a blacklisted profile on record.
+
+---
+
+## 7. Development & Deployment Cheatsheet
+
+### Quick Start Commands
+```bash
+# 1. Install root, client, and server dependencies
+npm run install:all
+
+# 2. Setup database and seed default accounts & fleet
+npm run seed
+
+# 3. Launch both backend API and frontend dev servers concurrently
+npm run dev
+# Frontend runs at: http://localhost:3000/
+# Backend API runs at: http://localhost:5000/
+
+# 4. Execute automated end-to-end integration test suite
+npm run test
+
+# 5. Compile production builds
+npm run build
+```
+
+### Pre-Configured Test Staff Credentials:
+* **Super Admin**: `admin@drivepulse.com` / `Password@123`
+* **Operations Manager**: `manager@drivepulse.com` / `Password@123`
+* **Counter Staff**: `staff@drivepulse.com` / `Password@123`
+
+---
+*DrivePulse Car Rental Management System — Engineered for reliability, compliance, and effortless daily operations.*
