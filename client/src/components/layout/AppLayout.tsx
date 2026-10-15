@@ -197,19 +197,51 @@ export const AppLayout: React.FC = () => {
           </div>
         </header>
 
-        {/* Mobile Navigation Drawer */}
+        {/* Mobile Slide-Over Drawer & Backdrop */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 p-4 space-y-1">
+          <div
+            className="fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-sm lg:hidden transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+        <div
+          className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shadow-2xl lg:hidden transform transition-transform duration-300 ease-in-out ${
+            mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          {/* Drawer Header */}
+          <div className="h-16 flex items-center justify-between px-5 border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+                <Car className="w-4 h-4" />
+              </div>
+              <div>
+                <h2 className="font-bold text-base bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent">
+                  DrivePulse
+                </h2>
+                <p className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">Fleet & Rentals</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Navigation Links */}
+          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileMenuOpen(false)}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium ${
+                  `flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      ? 'bg-indigo-600 text-white font-semibold shadow-sm shadow-indigo-600/30'
+                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                   }`
                 }
               >
@@ -217,20 +249,113 @@ export const AppLayout: React.FC = () => {
                 <span>{item.name}</span>
               </NavLink>
             ))}
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Sign Out</span>
-            </button>
+          </nav>
+
+          {/* Drawer Footer with User Info & Logout */}
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-800/40">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-bold flex items-center justify-center text-xs shrink-0">
+                  {user?.fullName?.charAt(0) || 'U'}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold truncate text-slate-900 dark:text-white">
+                    {user?.fullName}
+                  </p>
+                  <div className="scale-90 origin-left mt-0.5">{getRoleBadge(user?.role)}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={toggleTheme}
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5" />}
+                <span>{theme === 'dark' ? 'Light' : 'Dark'}</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
-        )}
+        </div>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 pb-24 md:pb-8 overflow-y-auto">
           <Outlet />
         </main>
+
+        {/* Mobile Bottom Navigation Bar (Phones / Narrow Tablets) */}
+        <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/80 dark:border-slate-800 px-3 py-1.5 flex items-center justify-around md:hidden shadow-xl safe-area-pb">
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) =>
+              `flex flex-col items-center gap-1 p-1 min-w-[56px] transition-colors ${
+                isActive
+                  ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`
+            }
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            <span className="text-[10px]">Dashboard</span>
+          </NavLink>
+
+          <NavLink
+            to="/vehicles"
+            className={({ isActive }) =>
+              `flex flex-col items-center gap-1 p-1 min-w-[56px] transition-colors ${
+                isActive
+                  ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`
+            }
+          >
+            <Car className="w-5 h-5" />
+            <span className="text-[10px]">Fleet</span>
+          </NavLink>
+
+          {/* Elevated Center "New Booking" Action */}
+          <NavLink
+            to="/bookings/new"
+            className="flex flex-col items-center -mt-5 group"
+          >
+            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/35 border-2 border-white dark:border-slate-900 active:scale-95 group-hover:scale-105 transition-transform">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
+              Book
+            </span>
+          </NavLink>
+
+          <NavLink
+            to="/bookings"
+            className={({ isActive }) =>
+              `flex flex-col items-center gap-1 p-1 min-w-[56px] transition-colors ${
+                isActive
+                  ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`
+            }
+          >
+            <CalendarCheck className="w-5 h-5" />
+            <span className="text-[10px]">Bookings</span>
+          </NavLink>
+
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="flex flex-col items-center gap-1 p-1 min-w-[56px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+          >
+            <Menu className="w-5 h-5" />
+            <span className="text-[10px]">Menu</span>
+          </button>
+        </nav>
       </div>
 
       {/* Session Timeout Warning Modal */}

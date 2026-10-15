@@ -209,16 +209,40 @@ npm test
 
 ---
 
-## 🔒 Production Deployment Notes
+### 7. Mobile & Tablet Dual-Optimization Architecture
+- **Responsive Mobile Navigation**: Dedicated off-canvas slide drawer with backdrop blur, dark mode switcher, and staff role badge.
+- **Sticky Mobile Bottom Bar**: Rapid one-thumb access on smartphones (`Dashboard`, `Fleet`, `Bookings`, and prominent `+ Book` action).
+- **Touch Signature Canvas**: High-DPI canvas supporting HTML5 touch events with `touch-action: none` to prevent screen scrolling.
+- **Mobile Floating Quotation Bar**: Dynamic bottom summary in `/bookings/new` showing real-time Total and Balance Due with smooth review triggers.
+- **Responsive Mobile Cards**: Data tables on narrow screens (<768px) automatically adapt into native-feeling touch cards with direct action buttons.
 
-1. **Database Migration to PostgreSQL**:
-   - In `server/prisma/schema.prisma`, update the datasource provider from `sqlite` to `postgresql`.
-   - Update `DATABASE_URL` in `.env` to your PostgreSQL connection string.
-   - Run `npx prisma migrate deploy`.
-2. **Object Storage**:
-   - The file storage layer in `server/src/services/storage.service.ts` is encapsulated behind an abstract interface, allowing an S3 or Google Cloud Storage driver to be swapped in seamlessly.
-3. **Cookie Security**:
-   - In production (`NODE_ENV=production`), cookies automatically enforce `secure: true` (HTTPS only) and `sameSite: strict`.
+---
+
+## 🔒 Zero-Cost ($0) Production Deployment for Client Testing
+
+To allow clients and stakeholders to test DrivePulse live on their **mobile phones and desktop browsers at $0 cost** with **no credit card required**:
+
+1. **Free PostgreSQL Database (Neon.tech)**:
+   - Create a free project at [Neon.tech](https://neon.tech) (0.5 GB SSD storage, serverless autoscaling, SSL included).
+   - Copy connection string to `DATABASE_URL`.
+2. **Free Backend REST API (Render.com)**:
+   - Create a free Web Service at [Render.com](https://render.com) from your GitHub repo (`root: server`).
+   - Build Command: `npm install && npm run build && npx prisma db push && npm run seed`
+   - Start Command: `npm start`
+   - Instance: Free (750 free hours/month, automated SSL: `https://your-api.onrender.com`).
+3. **Free Frontend SPA (Vercel.com)**:
+   - Import your GitHub repo on [Vercel.com](https://vercel.com) (`root: client`, framework: Vite).
+   - Set environment variable: `VITE_API_BASE_URL=https://your-api.onrender.com`.
+   - Free Edge CDN with custom domain or `https://your-app.vercel.app`.
+4. **Live Verification**:
+   - Total Cost: **$0.00 / month**.
+   - Client can log in with default staff accounts (`admin@drivepulse.com` / `Password@123`), create bookings on mobile, inspect vehicles with digital touch signatures, and download official 18% GST tax invoices.
+
+---
+
+## 📄 Documentation & PDF Guides
+- **System Architecture & Workflow Guide**: See [`SYSTEM_WORKFLOW_AND_ARCHITECTURE_GUIDE.md`](./SYSTEM_WORKFLOW_AND_ARCHITECTURE_GUIDE.md)
+- **Official Client Workflow PDF**: See [`DrivePulse_System_Workflow_Guide.pdf`](./DrivePulse_System_Workflow_Guide.pdf)
 
 ---
 

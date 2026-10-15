@@ -235,7 +235,7 @@ export const PaymentListPage: React.FC = () => {
               ))}
             </div>
 
-            {/* Table */}
+            {/* Table & Mobile Cards */}
             {isLoading ? (
               <div className="p-12 text-center text-xs text-slate-400">Loading payment ledger...</div>
             ) : payments.length === 0 ? (
@@ -243,20 +243,70 @@ export const PaymentListPage: React.FC = () => {
                 No payment transactions recorded yet.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase font-semibold">
-                    <tr>
-                      <th className="py-3 px-4">Receipt # / Date</th>
-                      <th className="py-3 px-4">Booking Ref</th>
-                      <th className="py-3 px-4">Customer</th>
-                      <th className="py-3 px-4">Method & Purpose</th>
-                      <th className="py-3 px-4">Amount</th>
-                      <th className="py-3 px-4">Cashier Staff</th>
-                      <th className="py-3 px-4 text-right">Receipt PDF</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div>
+                {/* Mobile Cards (< md) */}
+                <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                  {payments.map((p) => (
+                    <div key={p.id} className="p-4 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                          {p.receiptNumber}
+                        </span>
+                        <span className="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                          {p.mode}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <div>
+                          <span className="font-bold text-slate-900 dark:text-white block">
+                            {p.booking.customer.fullName}
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            {p.booking.bookingNumber} • {p.booking.vehicle.make} {p.booking.vehicle.model}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-black text-base text-slate-900 dark:text-white block">
+                            ₹{p.amount.toLocaleString('en-IN')}
+                          </span>
+                          <span className="text-[10px] text-slate-400 capitalize">{p.type.replace('_', ' ').toLowerCase()}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <span className="text-slate-400">
+                          {new Date(p.paymentDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                        </span>
+                        <a
+                          href={`/api/payments/${p.id}/receipt-pdf`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 rounded-lg"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Receipt PDF</span>
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Table (>= md) */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase font-semibold">
+                      <tr>
+                        <th className="py-3 px-4">Receipt # / Date</th>
+                        <th className="py-3 px-4">Booking Ref</th>
+                        <th className="py-3 px-4">Customer</th>
+                        <th className="py-3 px-4">Method & Purpose</th>
+                        <th className="py-3 px-4">Amount</th>
+                        <th className="py-3 px-4">Cashier Staff</th>
+                        <th className="py-3 px-4 text-right">Receipt PDF</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {payments.map((p) => (
                       <tr
                         key={p.id}
@@ -333,6 +383,7 @@ export const PaymentListPage: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+            </div>
             )}
           </div>
         )}
@@ -347,20 +398,74 @@ export const PaymentListPage: React.FC = () => {
                 No GST tax invoices generated yet. Use the "Generate Tax Invoice" button above to issue an invoice.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase font-semibold">
-                    <tr>
-                      <th className="py-3 px-4">Invoice # / Date</th>
-                      <th className="py-3 px-4">Booking Ref</th>
-                      <th className="py-3 px-4">Billed To Customer</th>
-                      <th className="py-3 px-4">Taxable Subtotal</th>
-                      <th className="py-3 px-4">CGST (9%) + SGST (9%)</th>
-                      <th className="py-3 px-4">Total Invoice Value</th>
-                      <th className="py-3 px-4 text-right">Tax Invoice PDF</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              <div>
+                {/* Mobile Cards (< md) */}
+                <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                  {invoices.map((inv) => (
+                    <div key={inv.id} className="p-4 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-sm">
+                          {inv.invoiceNumber}
+                        </span>
+                        <span className="text-[11px] text-slate-400">
+                          {new Date(inv.invoiceDate).toLocaleDateString('en-IN', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <div>
+                          <span className="font-bold text-slate-900 dark:text-white block">
+                            {inv.booking.customer.fullName}
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            Booking: {inv.booking.bookingNumber} • {inv.booking.vehicle.registrationNumber}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-black text-base text-blue-600 dark:text-blue-400 block">
+                            ₹{inv.totalAmount.toFixed(2)}
+                          </span>
+                          <span className="text-[10px] text-slate-400">Incl. 18% GST</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <span className="text-slate-500">
+                          Net: ₹{inv.subtotal.toFixed(2)} + GST: ₹{(inv.cgstAmount + inv.sgstAmount).toFixed(2)}
+                        </span>
+                        <a
+                          href={`/api/invoices/${inv.id}/pdf`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-600 rounded-lg"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Invoice PDF</span>
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop Table (>= md) */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase font-semibold">
+                      <tr>
+                        <th className="py-3 px-4">Invoice # / Date</th>
+                        <th className="py-3 px-4">Booking Ref</th>
+                        <th className="py-3 px-4">Billed To Customer</th>
+                        <th className="py-3 px-4">Taxable Subtotal</th>
+                        <th className="py-3 px-4">CGST (9%) + SGST (9%)</th>
+                        <th className="py-3 px-4">Total Invoice Value</th>
+                        <th className="py-3 px-4 text-right">Tax Invoice PDF</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {invoices.map((inv) => (
                       <tr
                         key={inv.id}
@@ -427,6 +532,7 @@ export const PaymentListPage: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+            </div>
             )}
           </div>
         )}

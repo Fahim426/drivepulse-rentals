@@ -22,37 +22,54 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set high DPI scaling
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#0f172a';
-    ctx.lineWidth = 2.5;
+    const setupCanvas = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.resetTransform?.();
+      ctx.scale(dpr, dpr);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2.5;
 
-    // Draw baseline
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(20, rect.height - 25);
-    ctx.lineTo(rect.width - 20, rect.height - 25);
-    ctx.stroke();
+      // Draw baseline
+      ctx.strokeStyle = '#cbd5e1';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(20, rect.height - 25);
+      ctx.lineTo(rect.width - 20, rect.height - 25);
+      ctx.stroke();
 
-    // Reset stroke style for signature
-    ctx.strokeStyle = '#0f172a';
-    ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2.5;
+    };
+
+    setupCanvas();
 
     if (value && value.startsWith('data:image')) {
       const img = new Image();
       img.onload = () => {
+        const rect = canvas.getBoundingClientRect();
         ctx.drawImage(img, 0, 0, rect.width, rect.height);
         setHasSignature(true);
       };
       img.src = value;
     }
+
+    const resizeObserver = new ResizeObserver(() => {
+      // Re-setup if dimensions change
+      if (!hasSignature) {
+        setupCanvas();
+      }
+    });
+    resizeObserver.observe(canvas);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, []);
 
   const getPos = (e: React.MouseEvent | React.TouchEvent) => {
@@ -67,14 +84,18 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
       };
     } else if ('clientX' in e) {
       return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x: (e as React.MouseEvent).clientX - rect.left,
+        y: (e as React.MouseEvent).clientY - rect.top,
       };
     }
     return { x: 0, y: 0 };
   };
 
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+    if ('touches' in e) {
+      // Prevent scrolling when touching signature canvas
+      e.stopPropagation();
+    }
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -88,6 +109,9 @@ export const SignatureCanvas: React.FC<SignatureCanvasProps> = ({
 
   const draw = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isDrawing) return;
+    if ('touches' in e) {
+      e.stopPropagation();
+    }
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');

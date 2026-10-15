@@ -361,4 +361,187 @@ npm run build
 * **Counter Staff**: `staff@drivepulse.com` / `Password@123`
 
 ---
-*DrivePulse Car Rental Management System — Engineered for reliability, compliance, and effortless daily operations.*
+
+## 8. Zero-Cost ($0) Production Deployment Guide for Client Testing
+
+To allow your client, investors, or testing stakeholders to evaluate **DrivePulse live in a real production environment on mobile phones and desktop computers without spending any money**, the application is architected to run seamlessly on top-tier **$0 / free cloud tiers** with **no credit card required**.
+
+### 8.1 The $0 Cloud Architecture Matrix
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│             GLOBAL CLIENT CDN & MOBILE APP (100% FREE)                 │
+│                      Platform: Vercel / Render                         │
+│   • Continuous Deployment from GitHub repo                             │
+│   • Global Anycast Edge CDN + Automatic Free SSL (HTTPS)               │
+│   • Zero cold start latency for mobile & desktop staff                 │
+│   • Monthly Cost: $0.00 / month                                        │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ HTTPS API Calls (httpOnly JWT Cookies)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│             PRODUCTION REST API ENGINE (100% FREE)                     │
+│                   Platform: Render Free Web Service                    │
+│   • Node.js 18+ runtime with Express, Zod & PDFKit                     │
+│   • 750 free instance hours/month (Covers 24/7 testing)                │
+│   • Free managed SSL subdomain: https://drivepulse-api.onrender.com    │
+│   • Automatic health checks & zero-downtime rolling deploys            │
+│   • Monthly Cost: $0.00 / month                                        │
+└───────────────────┬────────────────────────────────┬───────────────────┘
+                    │ Direct TLS Connection          │ Storage
+                    ▼                                ▼
+┌──────────────────────────────────────┐┌────────────────────────────────┐
+│   MANAGED POSTGRESQL DATABASE ($0)   ││   CLOUD ASSET STORAGE ($0)     │
+│       Platform: Neon Serverless      ││  Platform: Local / Cloudinary  │
+│ • 0.5 GB SSD Storage (thousands of   ││ • Local disk on persistent FS  │
+│   bookings, customers & vehicles)    ││   OR Cloudinary Free Tier      │
+│ • Serverless auto-scaling compute    ││   (25 GB managed bandwidth/mo) │
+│ • Automated SSL encryption           ││ • Digital signature data URIs  │
+│ • No credit card required            ││ • PDF receipts streamed online │
+│ • Monthly Cost: $0.00 / month        ││ • Monthly Cost: $0.00 / month  │
+└──────────────────────────────────────┘└────────────────────────────────┘
+```
+
+#### Cost Breakdown Summary:
+| Infrastructure Layer | Recommended Cloud Provider | Free Tier Specification | Cost to Test for Client |
+| :--- | :--- | :--- | :---: |
+| **Relational Database** | **Neon PostgreSQL** | 0.5 GB SSD, serverless autoscaling, SSL, no CC needed | **$0.00** |
+| **Backend REST API** | **Render Web Service** | 512 MB RAM, 750 free hours/month, automated SSL | **$0.00** |
+| **Frontend Web App** | **Vercel** / **Render Static** | Global Edge CDN, unlimited deployments, custom domain | **$0.00** |
+| **PDF Generation Engine** | Built-in PDFKit | Zero external microservices, runs in-memory on backend | **$0.00** |
+| **SSL / HTTPS Certificates** | Let's Encrypt (Automated) | Full end-to-end encryption for cookies and APIs | **$0.00** |
+| **Total Operational Cost** | — | **Full-featured production environment** | **$0.00 / Free** |
+
+---
+
+### 8.2 Step-by-Step Live Deployment Walkthrough
+
+#### Step 1: Provision Free PostgreSQL Database on Neon (2 Minutes)
+1. Sign up for free at **[Neon.tech](https://neon.tech)** (sign up with GitHub or Google; no credit card required).
+2. Click **Create Project**, choose project name `drivepulse-production` and region closest to your client (e.g. `ap-southeast-1` Singapore or `eu-central-1` Frankfurt).
+3. Copy the generated **Postgres Connection String**:
+   ```
+   postgresql://drivepulse_owner:PASSWORD@ep-xyz-12345.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+   ```
+4. This connection string will be set as your `DATABASE_URL` environment variable.
+
+#### Step 2: Push Your Codebase to GitHub
+1. Create a private or public repository on GitHub (e.g., `github.com/your-username/drivepulse-rental`).
+2. Push your project commits:
+   ```bash
+   git remote add origin https://github.com/your-username/drivepulse-rental.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+#### Step 3: Deploy Backend API to Render (3 Minutes)
+1. Sign up for free at **[Render.com](https://render.com)**.
+2. In the dashboard, click **New +** and select **Web Service**.
+3. Connect your GitHub repository.
+4. Configure the Web Service settings:
+   * **Name**: `drivepulse-api`
+   * **Root Directory**: `server`
+   * **Runtime**: `Node`
+   * **Build Command**:
+     ```bash
+     npm install && npm run build && npx prisma db push && npm run seed
+     ```
+   * **Start Command**:
+     ```bash
+     npm start
+     ```
+   * **Instance Type**: `Free` ($0/mo)
+5. Under **Environment Variables**, add the following:
+   * `DATABASE_URL`: *(Paste the Neon PostgreSQL connection string from Step 1)*
+   * `JWT_SECRET`: *(Generate a 32+ character random secret string)*
+   * `JWT_REFRESH_SECRET`: *(Generate a second random secret string)*
+   * `NODE_ENV`: `production`
+   * `PORT`: `5000`
+   * `CLIENT_URL`: `https://drivepulse.vercel.app` *(or your Vercel URL from Step 4)*
+6. Click **Create Web Service**. Render will install dependencies, compile TypeScript, run Prisma migrations onto Neon, seed all default fleet and staff records, and start the service with a secure URL (e.g. `https://drivepulse-api.onrender.com`).
+
+#### Step 4: Deploy Frontend Client to Vercel (2 Minutes)
+1. Sign up for free at **[Vercel.com](https://vercel.com)**.
+2. Click **Add New... > Project** and import your GitHub repository.
+3. Configure the project:
+   * **Framework Preset**: `Vite`
+   * **Root Directory**: Click edit and select `client`
+   * **Build Command**: `npm run build`
+   * **Output Directory**: `dist`
+4. Under **Environment Variables**, add:
+   * `VITE_API_BASE_URL`: `https://drivepulse-api.onrender.com` *(your Render backend URL)*
+5. Add a `vercel.json` SPA rewrite file inside the `client` directory (already pre-configured) to handle React Router client-side routing:
+   ```json
+   {
+     "rewrites": [
+       { "source": "/api/(.*)", "destination": "https://drivepulse-api.onrender.com/api/$1" },
+       { "source": "/(.*)", "destination": "/index.html" }
+     ]
+   }
+   ```
+6. Click **Deploy**. Vercel will build and deploy the production SPA to a live HTTPS URL (e.g., `https://drivepulse.vercel.app`).
+
+---
+
+### 8.3 Live Client Acceptance Testing (UAT) Guide
+
+Once deployed, provide the client with the live URL and the pre-configured test credentials. The client can test both on **smartphones (iOS Safari, Android Chrome)** and **desktop browsers**:
+
+#### Client UAT Verification Checklist:
+1. **Mobile Experience Testing**:
+   * Open the live URL on a phone. Notice the native mobile feel:
+   * **Touch Navigation Bar**: Quick one-thumb access to Dashboard, Fleet, Bookings, and floating New Booking action.
+   * **Mobile Off-Canvas Drawer**: Tap the "Menu" button to test the sliding navigation drawer with dark mode toggle and user role badge.
+   * **Interactive Booking Cards**: On `/bookings`, view the responsive card view with direct "Handover" and "Return" touch buttons.
+2. **Booking Dispatch & Dynamic Quotation**:
+   * Create a new booking on `/bookings/new`.
+   * Type a walk-in customer manually (e.g., *Vikram Patel*, *9876543210*).
+   * Notice that no rigid rates are forced; enter the negotiated tariff based on the party size (e.g., *₹3,500 for 5 passengers*).
+   * Check the **Mobile Sticky Quotation Bar** at the bottom showing live Total (`₹`), 18% GST calculation, and Balance Due.
+3. **Vehicle Handover & Digital Inspection**:
+   * Open the newly created booking and click **Handover Inspection**.
+   * Draw the customer's signature on the touch canvas using a finger or stylus.
+   * Confirm handover. Notice the status instantly flips to **Active on Road (`PICKED_UP`)**.
+4. **GST Invoicing & Official PDF Generation**:
+   * Navigate to `/payments`.
+   * Click **Generate Tax Invoice** or download the **Payment Receipt PDF**.
+   * Open the PDF to inspect the statutory Indian GST layout (HSN/SAC `996601`, 9% CGST, 9% SGST, signature verification, and official letterhead).
+5. **Role-Based Security Validation**:
+   * Log out and log in with Counter Staff credentials (`staff@drivepulse.com` / `Password@123`).
+   * Attempt to release a vehicle with an outstanding balance or override an expired insurance certificate; verify that the system blocks unauthorized overrides and demands Manager approval.
+
+---
+
+### 8.4 Production Environment Variable Reference
+
+#### Server (`server/.env`):
+```env
+# Database (Neon PostgreSQL Free Tier)
+DATABASE_URL="postgresql://user:password@ep-xyz.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+
+# Server Port & Mode
+PORT=5000
+NODE_ENV=production
+
+# Authentication Secrets
+JWT_SECRET="drivepulse_super_secure_jwt_production_secret_key_2026_xyz"
+JWT_REFRESH_SECRET="drivepulse_super_secure_refresh_token_secret_key_2026_abc"
+
+# Cross-Origin Resource Sharing (Frontend Domain)
+CLIENT_URL="https://drivepulse.vercel.app"
+
+# Storage Mode (local or cloudinary)
+STORAGE_DRIVER=local
+UPLOAD_DIR="./uploads"
+```
+
+#### Client (`client/.env`):
+```env
+# Points to Render Live REST API
+VITE_API_BASE_URL="https://drivepulse-api.onrender.com"
+```
+
+---
+
+*DrivePulse Car Rental Management System — Engineered for reliability, compliance, mobile excellence, and effortless $0 client verification.*
+

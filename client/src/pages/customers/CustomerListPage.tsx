@@ -186,9 +186,87 @@ export const CustomerListPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Customers Table */}
+      {/* Customers Table & Mobile Cards */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile Cards (< md) */}
+        <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+          {isLoading ? (
+            <div className="p-8 text-center text-slate-400 text-xs">Loading customers...</div>
+          ) : customers.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-xs">No customers found.</div>
+          ) : (
+            customers.map((c) => (
+              <div key={c.id} className="p-4 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold flex items-center justify-center text-xs">
+                      {c.fullName.charAt(0)}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white">{c.fullName}</h4>
+                      <p className="text-[11px] text-slate-400">{c.phone}</p>
+                    </div>
+                  </div>
+                  {c.isBlacklisted ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300">
+                      <Ban className="w-3 h-3" /> Blacklisted
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
+                      <CheckCircle2 className="w-3 h-3" /> Eligible
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-xs pt-1">
+                  <div>{getLicenceBadge(c)}</div>
+                  <div className="text-right">
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                      {c._count?.bookings || 0} booking(s)
+                    </span>
+                    {c.outstandingBalance && c.outstandingBalance > 0 ? (
+                      <p className="text-[11px] text-rose-600 font-bold">
+                        Due: ₹{c.outstandingBalance.toLocaleString('en-IN')}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <Link
+                    to={`/customers/${c.id}`}
+                    className="px-3 py-1.5 text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-xl"
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setEditingCustomer(c);
+                      setShowAddModal(true);
+                    }}
+                    className="px-3 py-1.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl"
+                  >
+                    Edit
+                  </button>
+                  {hasRole('SUPER_ADMIN', 'MANAGER') && (
+                    <button
+                      onClick={() => setBlacklistingCustomer(c)}
+                      className={`p-1.5 rounded-xl ${
+                        c.isBlacklisted ? 'text-emerald-600 hover:bg-emerald-50' : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50'
+                      }`}
+                      title={c.isBlacklisted ? 'Remove Blacklist' : 'Blacklist'}
+                    >
+                      <Ban className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table (>= md) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 uppercase tracking-wider font-semibold">
               <tr>

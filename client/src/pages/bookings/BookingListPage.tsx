@@ -232,152 +232,258 @@ export const BookingListPage: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase font-semibold">
-                <tr>
-                  <th className="py-3.5 px-4">Booking # / Date</th>
-                  <th className="py-3.5 px-4">Customer</th>
-                  <th className="py-3.5 px-4">Vehicle</th>
-                  <th className="py-3.5 px-4">Rental Duration</th>
-                  <th className="py-3.5 px-4">Financials</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-right">Quick Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {bookings.map((booking) => {
-                  const cfg = STATUS_CONFIG[booking.status] || STATUS_CONFIG.CONFIRMED;
-                  const pickup = new Date(booking.pickupDateTime);
-                  const returnD = new Date(booking.returnDateTime);
+          <div>
+            {/* Mobile Card View (< md) */}
+            <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+              {bookings.map((booking) => {
+                const cfg = STATUS_CONFIG[booking.status] || STATUS_CONFIG.CONFIRMED;
+                const pickup = new Date(booking.pickupDateTime);
+                const returnD = new Date(booking.returnDateTime);
 
-                  return (
-                    <tr
-                      key={booking.id}
-                      className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
-                      onClick={() => navigate(`/bookings/${booking.id}`)}
-                    >
-                      {/* Booking # & Created */}
-                      <td className="py-4 px-4">
-                        <div className="font-bold text-blue-600 dark:text-blue-400 text-sm group-hover:underline">
-                          {booking.bookingNumber}
-                        </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">
-                          {new Date(booking.createdAt).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </div>
-                      </td>
+                return (
+                  <div
+                    key={booking.id}
+                    className="p-4 space-y-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={() => navigate(`/bookings/${booking.id}`)}
+                        className="font-black text-blue-600 dark:text-blue-400 text-sm hover:underline"
+                      >
+                        {booking.bookingNumber}
+                      </button>
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${cfg.bg} ${cfg.text} ${cfg.border}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                        {cfg.label}
+                      </span>
+                    </div>
 
-                      {/* Customer */}
-                      <td className="py-4 px-4">
-                        <div className="font-bold text-slate-900 dark:text-white">
-                          {booking.customer.fullName}
-                        </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                          {booking.customer.phone}
-                        </div>
-                      </td>
-
-                      {/* Vehicle */}
-                      <td className="py-4 px-4">
-                        <div className="font-bold text-slate-800 dark:text-slate-200">
+                    <div className="flex items-center justify-between text-xs">
+                      <div>
+                        <span className="font-bold text-slate-900 dark:text-white block">
                           {booking.vehicle.make} {booking.vehicle.model}
-                        </div>
+                        </span>
                         <span className="inline-block mt-0.5 font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                           {booking.vehicle.registrationNumber}
                         </span>
-                      </td>
-
-                      {/* Dates & Duration */}
-                      <td className="py-4 px-4">
-                        <div className="text-slate-800 dark:text-slate-200 font-medium">
-                          {pickup.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}{' '}
-                          <span className="text-slate-400">→</span>{' '}
-                          {returnD.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                        </div>
-                        <div className="text-[11px] text-slate-400 mt-0.5">
-                          {booking.rentalDays} Day(s) {booking.withDriver && '• With Chauffeur'}
-                        </div>
-                      </td>
-
-                      {/* Financials */}
-                      <td className="py-4 px-4">
-                        <div className="font-bold text-slate-900 dark:text-white">
-                          ₹{booking.totalAmount.toLocaleString('en-IN')}
-                        </div>
-                        <div className="text-[11px] mt-0.5">
-                          {booking.balanceDue > 0 ? (
-                            <span className="text-amber-600 dark:text-amber-400 font-medium">
-                              Due: ₹{booking.balanceDue.toLocaleString('en-IN')}
-                            </span>
-                          ) : (
-                            <span className="text-emerald-600 dark:text-emerald-400 font-medium">
-                              Fully Settled
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Status Badge */}
-                      <td className="py-4 px-4">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${cfg.bg} ${cfg.text} ${cfg.border}`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                          {cfg.label}
+                      </div>
+                      <div className="text-right">
+                        <span className="font-semibold text-slate-900 dark:text-white block">
+                          {booking.customer.fullName}
                         </span>
-                      </td>
+                        <span className="text-[11px] text-slate-500">{booking.customer.phone}</span>
+                      </div>
+                    </div>
 
-                      {/* Actions */}
-                      <td
-                        className="py-4 px-4 text-right"
-                        onClick={(e) => e.stopPropagation()}
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between text-[11px]">
+                      <div>
+                        <span className="text-slate-400 block">Dates:</span>
+                        <span className="font-medium text-slate-700 dark:text-slate-300">
+                          {pickup.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} →{' '}
+                          {returnD.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} ({booking.rentalDays}d)
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-slate-400 block">Total: ₹{booking.totalAmount.toLocaleString('en-IN')}</span>
+                        {booking.balanceDue > 0 ? (
+                          <span className="text-amber-600 font-bold">Due: ₹{booking.balanceDue.toLocaleString('en-IN')}</span>
+                        ) : (
+                          <span className="text-emerald-600 font-bold">Settled</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <a
+                        href={`/api/bookings/${booking.id}/agreement-pdf`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                       >
-                        <div className="flex items-center justify-end gap-1.5">
-                          {booking.status === 'CONFIRMED' && (
-                            <button
-                              onClick={() => setActivePickupBooking(booking)}
-                              className="px-2.5 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm"
-                            >
-                              Handover
-                            </button>
-                          )}
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Agreement</span>
+                      </a>
 
-                          {booking.status === 'PICKED_UP' && (
-                            <button
-                              onClick={() => setActiveReturnBooking(booking)}
-                              className="px-2.5 py-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm"
-                            >
-                              Return
-                            </button>
-                          )}
-
-                          <a
-                            href={`/api/bookings/${booking.id}/agreement-pdf`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                            title="Download Agreement PDF"
-                          >
-                            <Download className="w-4 h-4" />
-                          </a>
-
+                      <div className="flex items-center gap-2">
+                        {booking.status === 'CONFIRMED' && (
                           <button
-                            onClick={() => navigate(`/bookings/${booking.id}`)}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            onClick={() => setActivePickupBooking(booking)}
+                            className="px-3 py-1.5 text-xs font-bold bg-blue-600 text-white rounded-xl shadow-sm"
                           >
-                            <ChevronRight className="w-4 h-4" />
+                            Handover
                           </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        )}
+                        {booking.status === 'PICKED_UP' && (
+                          <button
+                            onClick={() => setActiveReturnBooking(booking)}
+                            className="px-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded-xl shadow-sm"
+                          >
+                            Return
+                          </button>
+                        )}
+                        <button
+                          onClick={() => navigate(`/bookings/${booking.id}`)}
+                          className="px-3 py-1.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl"
+                        >
+                          View
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View (>= md) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase font-semibold">
+                  <tr>
+                    <th className="py-3.5 px-4">Booking # / Date</th>
+                    <th className="py-3.5 px-4">Customer</th>
+                    <th className="py-3.5 px-4">Vehicle</th>
+                    <th className="py-3.5 px-4">Rental Duration</th>
+                    <th className="py-3.5 px-4">Financials</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4 text-right">Quick Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {bookings.map((booking) => {
+                    const cfg = STATUS_CONFIG[booking.status] || STATUS_CONFIG.CONFIRMED;
+                    const pickup = new Date(booking.pickupDateTime);
+                    const returnD = new Date(booking.returnDateTime);
+
+                    return (
+                      <tr
+                        key={booking.id}
+                        className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                        onClick={() => navigate(`/bookings/${booking.id}`)}
+                      >
+                        {/* Booking # & Created */}
+                        <td className="py-4 px-4">
+                          <div className="font-bold text-blue-600 dark:text-blue-400 text-sm group-hover:underline">
+                            {booking.bookingNumber}
+                          </div>
+                          <div className="text-[11px] text-slate-400 mt-0.5">
+                            {new Date(booking.createdAt).toLocaleDateString('en-IN', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </div>
+                        </td>
+
+                        {/* Customer */}
+                        <td className="py-4 px-4">
+                          <div className="font-bold text-slate-900 dark:text-white">
+                            {booking.customer.fullName}
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {booking.customer.phone}
+                          </div>
+                        </td>
+
+                        {/* Vehicle */}
+                        <td className="py-4 px-4">
+                          <div className="font-bold text-slate-800 dark:text-slate-200">
+                            {booking.vehicle.make} {booking.vehicle.model}
+                          </div>
+                          <span className="inline-block mt-0.5 font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                            {booking.vehicle.registrationNumber}
+                          </span>
+                        </td>
+
+                        {/* Dates & Duration */}
+                        <td className="py-4 px-4">
+                          <div className="text-slate-800 dark:text-slate-200 font-medium">
+                            {pickup.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}{' '}
+                            <span className="text-slate-400">→</span>{' '}
+                            {returnD.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                          </div>
+                          <div className="text-[11px] text-slate-400 mt-0.5">
+                            {booking.rentalDays} Day(s) {booking.withDriver && '• With Chauffeur'}
+                          </div>
+                        </td>
+
+                        {/* Financials */}
+                        <td className="py-4 px-4">
+                          <div className="font-bold text-slate-900 dark:text-white">
+                            ₹{booking.totalAmount.toLocaleString('en-IN')}
+                          </div>
+                          <div className="text-[11px] mt-0.5">
+                            {booking.balanceDue > 0 ? (
+                              <span className="text-amber-600 dark:text-amber-400 font-medium">
+                                Due: ₹{booking.balanceDue.toLocaleString('en-IN')}
+                              </span>
+                            ) : (
+                              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                                Fully Settled
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Status Badge */}
+                        <td className="py-4 px-4">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${cfg.bg} ${cfg.text} ${cfg.border}`}
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                            {cfg.label}
+                          </span>
+                        </td>
+
+                        {/* Actions */}
+                        <td
+                          className="py-4 px-4 text-right"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-end gap-1.5">
+                            {booking.status === 'CONFIRMED' && (
+                              <button
+                                onClick={() => setActivePickupBooking(booking)}
+                                className="px-2.5 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm"
+                              >
+                                Handover
+                              </button>
+                            )}
+
+                            {booking.status === 'PICKED_UP' && (
+                              <button
+                                onClick={() => setActiveReturnBooking(booking)}
+                                className="px-2.5 py-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm"
+                              >
+                                Return
+                              </button>
+                            )}
+
+                            <a
+                              href={`/api/bookings/${booking.id}/agreement-pdf`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                              title="Download Agreement PDF"
+                            >
+                              <Download className="w-4 h-4" />
+                            </a>
+
+                            <button
+                              onClick={() => navigate(`/bookings/${booking.id}`)}
+                              className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

@@ -885,7 +885,7 @@ export const CreateBookingPage: React.FC = () => {
         </div>
 
         {/* Right Sticky Column: Real-time Live Quotation Breakdown (5 cols) */}
-        <div className="lg:col-span-5 sticky top-20 space-y-4">
+        <div id="quotation-summary" className="lg:col-span-5 sticky top-20 space-y-4">
           <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-xl space-y-4 border border-slate-800">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div>
@@ -1028,6 +1028,41 @@ export const CreateBookingPage: React.FC = () => {
                 Save as Draft Quotation
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Sticky Live Quote Bar (< lg) */}
+      <div className="lg:hidden fixed bottom-14 left-0 right-0 z-20 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-3 shadow-2xl safe-area-pb">
+        <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
+          <div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[10px] text-slate-400 uppercase font-semibold">Total:</span>
+              <span className="text-sm font-black text-blue-400">₹{totalAmount.toLocaleString('en-IN')}</span>
+            </div>
+            <div className="text-[10px] text-slate-400">
+              Balance: <span className="text-amber-400 font-semibold">₹{balanceDue.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                document.getElementById('quotation-summary')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="px-2.5 py-1.5 text-[11px] font-bold text-slate-300 hover:text-white bg-slate-800 rounded-xl"
+            >
+              Review
+            </button>
+            <button
+              type="button"
+              disabled={!isFormValid || isSubmitting}
+              onClick={() => handleCreate('CONFIRMED')}
+              className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/30 disabled:opacity-50"
+            >
+              {isSubmitting ? 'Creating...' : 'Confirm'}
+            </button>
           </div>
         </div>
       </div>
