@@ -76,26 +76,29 @@ async function main() {
   }
   console.log('✅ Default settings configured');
 
-  // ==========================================
-  // Clean all vehicles, bookings, customers, payments & invoices
-  // ==========================================
-  console.log('🧹 Purging all vehicles, bookings, customers, payments, invoices, and documents...');
-  await prisma.inspectionChecklist.deleteMany();
-  await prisma.bookingExtra.deleteMany();
-  await prisma.payment.deleteMany();
-  await prisma.invoice.deleteMany();
-  await prisma.booking.deleteMany();
-  await prisma.customerDocument.deleteMany();
-  await prisma.customer.deleteMany();
-  await prisma.vehicleDocumentHistory.deleteMany();
-  await prisma.vehicleDocument.deleteMany();
-  await prisma.maintenanceRecord.deleteMany();
-  await prisma.expense.deleteMany();
-  await prisma.vehicle.deleteMany();
-  await prisma.auditLog.deleteMany();
+  // Check if vehicles exist before cleaning
+  const vehicleCount = await prisma.vehicle.count();
+  if (vehicleCount > 0) {
+    console.log(`ℹ️ Fleet already contains ${vehicleCount} vehicle(s). Preserving existing operational records.`);
+  } else {
+    console.log('🧹 Purging any remnant test records...');
+    await prisma.inspectionChecklist.deleteMany();
+    await prisma.bookingExtra.deleteMany();
+    await prisma.payment.deleteMany();
+    await prisma.invoice.deleteMany();
+    await prisma.booking.deleteMany();
+    await prisma.customerDocument.deleteMany();
+    await prisma.customer.deleteMany();
+    await prisma.vehicleDocumentHistory.deleteMany();
+    await prisma.vehicleDocument.deleteMany();
+    await prisma.maintenanceRecord.deleteMany();
+    await prisma.expense.deleteMany();
+    await prisma.vehicle.deleteMany();
+    await prisma.auditLog.deleteMany();
+    console.log('✅ Pristine state: 0 vehicles, 0 test customers, 0 test bookings, 0 test payments.');
+  }
 
-  console.log('✅ Pristine state: 0 vehicles, 0 test customers, 0 test bookings, 0 test payments.');
-  console.log('🎉 Fresh web application ready for live production use with manual vehicle entry!');
+  console.log('🎉 Web application ready for live production use with manual vehicle entry!');
 }
 
 main()

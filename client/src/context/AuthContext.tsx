@@ -34,7 +34,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [refreshUser]);
 
   const login = async (email: string, password: string) => {
-    const result = await api.post<{ user: User }>('/auth/login', { email, password });
+    const result = await api.post<{ user: User; accessToken?: string }>('/auth/login', { email, password });
+    if (result.accessToken) {
+      localStorage.setItem('token', result.accessToken);
+    }
     setUser(result.user);
   };
 
@@ -44,6 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       // Clear local state anyway
     } finally {
+      localStorage.removeItem('token');
       setUser(null);
     }
   };

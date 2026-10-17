@@ -8,6 +8,8 @@ dist/
 build/
 dist-ssr/
 *.local
+.vercel/
+.vercel
 
 # Environment variables & secrets
 .env

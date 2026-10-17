@@ -13,13 +13,21 @@ export class ApiError extends Error {
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = endpoint.startsWith('http') ? endpoint : `/api${endpoint}`;
+  const apiBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = endpoint.startsWith('http') ? endpoint : `${apiBase}/api${cleanEndpoint}`;
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     Accept: 'application/json',
     ...(options.headers || {}),
   };
+
+  // Add Authorization Bearer header if access token exists in localStorage (supports cross-domain auth)
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (token && !(headers as Record<string, string>)['Authorization']) {
+    (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+  }
 
   // If sending FormData (file uploads), remove Content-Type so browser sets boundary
   if (options.body instanceof FormData) {

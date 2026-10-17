@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: drivepulse-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install && npm run build && npx prisma db push && npm run seed
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_URL
+        value: https://client-green-ten-18.vercel.app
+      - key: DATABASE_URL
+        value: file:./dev.db
+      - key: JWT_ACCESS_SECRET
+        value: drivepulse_jwt_access_secret_super_secure_key_2026_xyz
+      - key: JWT_REFRESH_SECRET
+        value: drivepulse_jwt_refresh_secret_super_secure_key_2026_abc
+      - key: GEMINI_MODEL
+        value: gemini-1.5-flash
+      - key: GEMINI_API_KEY
+        sync: false

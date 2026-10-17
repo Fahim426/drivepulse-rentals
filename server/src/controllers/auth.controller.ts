@@ -21,7 +21,7 @@ export class AuthController {
 
       setAuthCookies(res, result.accessToken, result.refreshToken);
 
-      return sendSuccess(res, { user: result.user }, 'Login successful');
+      return sendSuccess(res, { user: result.user, accessToken: result.accessToken }, 'Login successful');
     } catch (error) {
       next(error);
     }
@@ -87,7 +87,7 @@ export class AuthController {
       const result = await AuthService.refresh(refreshToken);
       setAuthCookies(res, result.accessToken, refreshToken);
 
-      return sendSuccess(res, { user: result.user }, 'Token refreshed successfully');
+      return sendSuccess(res, { user: result.user, accessToken: result.accessToken }, 'Token refreshed successfully');
     } catch (error) {
       next(error);
     }
