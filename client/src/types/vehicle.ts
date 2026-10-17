@@ -1,4 +1,5 @@
 export type VehicleStatus = 'AVAILABLE' | 'RENTED' | 'MAINTENANCE' | 'INACTIVE';
+export type VehicleType = 'CAR' | 'BIKE' | 'SCOOTER';
 export type FuelType = 'Petrol' | 'Diesel' | 'Electric' | 'Hybrid' | 'CNG';
 export type Transmission = 'Manual' | 'Automatic';
 export type DocumentType = 'INSURANCE' | 'FITNESS' | 'PUC' | 'RC' | 'ROAD_TAX' | 'PERMIT';
@@ -72,6 +73,7 @@ export interface Vehicle {
   make: string;
   model: string;
   variant?: string | null;
+  type?: VehicleType;
   year: number;
   color: string;
   fuelType: FuelType;

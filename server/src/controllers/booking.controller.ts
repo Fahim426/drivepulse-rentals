@@ -10,10 +10,12 @@ export class BookingController {
    */
   public static async getAvailableVehicles(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      const { pickupDateTime, returnDateTime, vehicleType, excludeBookingId } = req.query as {
+      const { pickupDateTime, returnDateTime, vehicleType, type, category, excludeBookingId } = req.query as {
         pickupDateTime?: string;
         returnDateTime?: string;
         vehicleType?: string;
+        type?: string;
+        category?: string;
         excludeBookingId?: string;
       };
 
@@ -46,12 +48,14 @@ export class BookingController {
       const bookedVehicleIds = conflictingBookings.map((b) => b.vehicleId);
 
       // 2. Fetch candidate vehicles that are active and not in maintenance
+      const targetType = (type || category) as string;
       const vehicles = await prisma.vehicle.findMany({
         where: {
           deletedAt: null,
           status: { in: ['AVAILABLE', 'RENTED'] }, // RENTED vehicles might be free during requested future dates
           id: { notIn: bookedVehicleIds },
-          fuelType: vehicleType ? vehicleType : undefined,
+          ...(targetType && targetType !== 'ALL' && { type: targetType.toUpperCase() }),
+          ...(vehicleType && ['Petrol', 'Diesel', 'Electric', 'Hybrid', 'CNG'].includes(vehicleType) && { fuelType: vehicleType }),
         },
         include: {
           documents: true,
@@ -502,8 +506,8 @@ export class BookingController {
       });
 
       const subtotal = Math.max(0, baseRental + driverTotal + totalExtrasAmount - Number(discountAmount || 0));
-      const taxPercentage = 18; // GST 18%
-      const taxAmount = Math.round((subtotal * (taxPercentage / 100)) * 100) / 100;
+      const taxPercentage = req.body.taxPercentage !== undefined ? Number(req.body.taxPercentage) : 18;
+      const taxAmount = taxPercentage > 0 ? Math.round((subtotal * (taxPercentage / 100)) * 100) / 100 : 0;
       const totalAmount = Math.round((subtotal + taxAmount) * 100) / 100;
       const securityDeposit = vehicle.securityDeposit;
       const balanceDue = Math.max(0, totalAmount - Number(advancePaid || 0));

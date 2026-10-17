@@ -1,9 +1,16 @@
 import { Request } from 'express';
 
 export enum Role {
+  ADMIN = 'ADMIN',
   SUPER_ADMIN = 'SUPER_ADMIN',
   MANAGER = 'MANAGER',
   STAFF = 'STAFF',
+}
+
+export enum VehicleType {
+  CAR = 'CAR',
+  BIKE = 'BIKE',
+  SCOOTER = 'SCOOTER',
 }
 
 export enum VehicleStatus {

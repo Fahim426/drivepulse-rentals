@@ -248,7 +248,14 @@ export const ReportsPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {revenueData?.payments?.map((p: any) => (
+                  {(!revenueData?.payments || revenueData.payments.length === 0) ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-slate-400 text-xs">
+                        No transactions recorded for the selected period.
+                      </td>
+                    </tr>
+                  ) : (
+                    revenueData.payments.map((p: any) => (
                     <tr key={p.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
                       <td className="py-3 px-4">
                         <span className="font-mono font-bold text-slate-900 dark:text-white block">
@@ -290,7 +297,8 @@ export const ReportsPage: React.FC = () => {
                         {p.receivedByUser?.fullName || 'Cashier'}
                       </td>
                     </tr>
-                  ))}
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -478,7 +486,14 @@ export const ReportsPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {customerData?.customers?.map((c: any) => (
+                  {(!customerData?.customers || customerData.customers.length === 0) ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400 text-xs">
+                        No customer accounts or rental history recorded yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    customerData.customers.map((c: any) => (
                     <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
                       <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">
                         {c.fullName}
@@ -508,7 +523,8 @@ export const ReportsPage: React.FC = () => {
                         )}
                       </td>
                     </tr>
-                  ))}
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

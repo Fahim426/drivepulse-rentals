@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   ArrowLeft,
   Calendar,
@@ -46,6 +46,13 @@ const DEFAULT_EXTRAS = [
   { name: 'Express Interior Detailing', dailyPrice: 0, fixedPrice: 350 },
 ];
 
+const TWO_WHEELER_EXTRAS = [
+  { name: 'Rider Safety Helmet (ISI/DOT Approved)', dailyPrice: 100, fixedPrice: 0 },
+  { name: 'Pillion Passenger Safety Helmet', dailyPrice: 80, fixedPrice: 0 },
+  { name: 'Anti-Vibration Handlebar Mobile Mount', dailyPrice: 50, fixedPrice: 0 },
+  { name: 'Riding Gloves & Rain Poncho', dailyPrice: 120, fixedPrice: 0 },
+];
+
 export const CreateBookingPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -77,6 +84,7 @@ export const CreateBookingPage: React.FC = () => {
   const [availableVehicles, setAvailableVehicles] = useState<AvailableVehicle[]>([]);
   const [isLoadingVehicles, setIsLoadingVehicles] = useState(false);
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
+  const [vehicleCategoryFilter, setVehicleCategoryFilter] = useState<'ALL' | 'CAR' | 'BIKE' | 'SCOOTER'>('ALL');
 
   // Rental tariff: Manual entry based on passenger count/negotiation
   const [manualRentalAmount, setManualRentalAmount] = useState<number | ''>('');
@@ -145,12 +153,20 @@ export const CreateBookingPage: React.FC = () => {
   const selectedCustomer = customers.find((c) => c.id === selectedCustomerId);
   const selectedVehicle = availableVehicles.find((v) => v.id === selectedVehicleId);
 
-  // Auto adjust passenger count if vehicle changes and capacity is lower
+  // Auto adjust passenger count & chauffeur if vehicle changes
   useEffect(() => {
-    if (selectedVehicle && passengerCount > selectedVehicle.seats) {
-      setPassengerCount(selectedVehicle.seats);
+    if (selectedVehicle) {
+      if (passengerCount > selectedVehicle.seats) {
+        setPassengerCount(selectedVehicle.seats);
+      }
+      if (selectedVehicle.type === 'BIKE' || selectedVehicle.type === 'SCOOTER') {
+        setWithDriver(false);
+      }
     }
   }, [selectedVehicleId]);
+
+  const isTwoWheeler = selectedVehicle?.type === 'BIKE' || selectedVehicle?.type === 'SCOOTER';
+  const availableExtras = isTwoWheeler ? TWO_WHEELER_EXTRAS : DEFAULT_EXTRAS;
 
   // Customer DL & Blacklist Checks (for existing customer mode)
   const customerDl = selectedCustomer?.documents?.find((d) => d.docType === 'DRIVING_LICENCE');
@@ -179,8 +195,9 @@ export const CreateBookingPage: React.FC = () => {
     0
   );
   const subtotal = Math.max(0, baseRental + driverTotal + extrasTotal - Number(discountAmount || 0));
-  const taxAmount = Math.round(subtotal * 0.18 * 100) / 100;
-  const totalAmount = Math.round((subtotal + taxAmount) * 100) / 100;
+  // 18% GST is already included in the agreed tariff
+  const taxAmount = 0;
+  const totalAmount = subtotal;
   const securityDeposit = selectedVehicle?.securityDeposit || 5000;
   const balanceDue = Math.max(0, totalAmount - Number(advancePaid || 0));
 
@@ -250,6 +267,7 @@ export const CreateBookingPage: React.FC = () => {
         returnLocation,
         rateType: 'DAILY',
         manualRentalAmount: Number(baseRental || 0),
+        taxPercentage: 0,
         passengerCount: Number(passengerCount || 1),
         withDriver,
         driverAllowancePerDay: withDriver ? driverAllowancePerDay : 0,
@@ -607,58 +625,110 @@ export const CreateBookingPage: React.FC = () => {
               </span>
             </div>
 
+            {/* Category Filter Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {[
+                { id: 'ALL', label: `All (${availableVehicles.length})` },
+                { id: 'CAR', label: '🚗 Cars' },
+                { id: 'BIKE', label: '🏍️ Bikes' },
+                { id: 'SCOOTER', label: '🛵 Scooters' },
+              ].map((pill) => (
+                <button
+                  key={pill.id}
+                  type="button"
+                  onClick={() => setVehicleCategoryFilter(pill.id as any)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                    vehicleCategoryFilter === pill.id
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {pill.label}
+                </button>
+              ))}
+            </div>
+
             {availableVehicles.length === 0 && !isLoadingVehicles ? (
               <div className="p-8 text-center text-xs text-slate-400 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-                No vehicles available for the selected dates. Please adjust your pickup/return window.
+                <p className="font-semibold text-slate-700 dark:text-slate-300 mb-1">No vehicles available</p>
+                <p className="mb-3 text-slate-400">Your fleet may be empty or all vehicles are reserved for these dates.</p>
+                <Link
+                  to="/vehicles"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Go to Fleet to Add Vehicle</span>
+                </Link>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-1">
-                {availableVehicles.map((vehicle) => {
-                  const isSelected = selectedVehicleId === vehicle.id;
-                  return (
-                    <div
-                      key={vehicle.id}
-                      onClick={() => setSelectedVehicleId(vehicle.id)}
-                      className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
-                        isSelected
-                          ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 shadow-md ring-2 ring-blue-500/30'
-                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h4 className="font-bold text-sm text-slate-900 dark:text-white">
-                            {vehicle.make} {vehicle.model}
-                          </h4>
-                          <span className="font-mono text-[11px] text-slate-500 block mt-0.5">
-                            {vehicle.registrationNumber}
+                {availableVehicles
+                  .filter(
+                    (v) => vehicleCategoryFilter === 'ALL' || (v.type || 'CAR') === vehicleCategoryFilter
+                  )
+                  .map((vehicle) => {
+                    const isSelected = selectedVehicleId === vehicle.id;
+                    return (
+                      <div
+                        key={vehicle.id}
+                        onClick={() => setSelectedVehicleId(vehicle.id)}
+                        className={`p-3.5 rounded-2xl border cursor-pointer transition-all ${
+                          isSelected
+                            ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/20 shadow-md ring-2 ring-blue-500/30'
+                            : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h4 className="font-bold text-sm text-slate-900 dark:text-white">
+                                {vehicle.make} {vehicle.model}
+                              </h4>
+                              <span
+                                className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full border ${
+                                  vehicle.type === 'BIKE'
+                                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                                    : vehicle.type === 'SCOOTER'
+                                    ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                                    : 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+                                }`}
+                              >
+                                {vehicle.type === 'BIKE'
+                                  ? '🏍️ Bike'
+                                  : vehicle.type === 'SCOOTER'
+                                  ? '🛵 Scooter'
+                                  : '🚗 Car'}
+                              </span>
+                            </div>
+                            <span className="font-mono text-[11px] text-slate-500 block mt-0.5">
+                              {vehicle.registrationNumber}
+                            </span>
+                          </div>
+                          {/* Seating badge instead of fixed price */}
+                          <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-lg border border-blue-200 dark:border-blue-900 shrink-0">
+                            👥 {vehicle.seats} Seater
                           </span>
                         </div>
-                        {/* Seating badge instead of fixed price */}
-                        <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-lg border border-blue-200 dark:border-blue-900 shrink-0">
-                          👥 {vehicle.seats} Seater
-                        </span>
-                      </div>
 
-                      <div className="flex items-center gap-3 mt-3 text-[11px] text-slate-500">
-                        <span>{vehicle.fuelType}</span>
-                        <span>•</span>
-                        <span>{vehicle.transmission}</span>
-                        <span>•</span>
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                          Custom Tariff
-                        </span>
-                      </div>
-
-                      {/* Compliance Warning */}
-                      {vehicle.complianceBlocked && (
-                        <div className="mt-2.5 p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/30 text-[10px] text-rose-700 dark:text-rose-400 font-medium">
-                          ⚠️ {vehicle.complianceIssues.join(', ')}
+                        <div className="flex items-center gap-3 mt-3 text-[11px] text-slate-500">
+                          <span>{vehicle.fuelType}</span>
+                          <span>•</span>
+                          <span>{vehicle.transmission}</span>
+                          <span>•</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                            Custom Tariff
+                          </span>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+
+                        {/* Compliance Warning */}
+                        {vehicle.complianceBlocked && (
+                          <div className="mt-2.5 p-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/30 text-[10px] text-rose-700 dark:text-rose-400 font-medium">
+                            ⚠️ {vehicle.complianceIssues.join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
               </div>
             )}
 
@@ -783,32 +853,48 @@ export const CreateBookingPage: React.FC = () => {
               <h3>Add-ons & Chauffeur Services</h3>
             </div>
 
-            {/* Chauffeur Toggle */}
-            <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                  Dedicated Chauffeur (With Driver)
-                </span>
-                <span className="text-[11px] text-slate-500">
-                  Professional licensed corporate driver • ₹500 / day
+            {/* Chauffeur Toggle or Two-Wheeler Notice */}
+            {isTwoWheeler ? (
+              <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/40">
+                <div>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                    Self-Ride Rental ({selectedVehicle?.type === 'BIKE' ? 'Bike' : 'Scooter'})
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    Two-wheelers are self-ride rentals only. Chauffeur services are not applicable.
+                  </span>
+                </div>
+                <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+                  Self-Ride Only
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => setWithDriver(!withDriver)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  withDriver
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                }`}
-              >
-                {withDriver ? 'Driver Added (+₹500/d)' : 'Self-Drive'}
-              </button>
-            </div>
+            ) : (
+              <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white block">
+                    Dedicated Chauffeur (With Driver)
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    Professional licensed corporate driver • ₹500 / day
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setWithDriver(!withDriver)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    withDriver
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  {withDriver ? 'Driver Added (+₹500/d)' : 'Self-Drive'}
+                </button>
+              </div>
+            )}
 
             {/* Extras items */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {DEFAULT_EXTRAS.map((extra) => {
+              {availableExtras.map((extra) => {
                 const isSelected = extras.some((e) => e.name === extra.name);
                 const priceStr =
                   extra.dailyPrice > 0 ? `+₹${extra.dailyPrice}/d` : `+₹${extra.fixedPrice} fixed`;
@@ -971,19 +1057,14 @@ export const CreateBookingPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex justify-between text-slate-400 pt-2 border-t border-slate-800">
-                <span>Subtotal (Net)</span>
-                <span className="text-white">₹{subtotal.toLocaleString('en-IN')}</span>
-              </div>
-
-              <div className="flex justify-between text-slate-400">
-                <span>GST Tax (18%)</span>
-                <span className="text-white">₹{taxAmount.toLocaleString('en-IN')}</span>
-              </div>
-
-              {/* Total Card */}
-              <div className="flex justify-between items-center text-sm font-bold text-white pt-2 border-t border-slate-800">
-                <span>TOTAL RENTAL CHARGES</span>
+              {/* Total Card (GST Already Included) */}
+              <div className="flex justify-between items-center text-sm font-bold text-white pt-3 border-t border-slate-800">
+                <div>
+                  <span>TOTAL RENTAL CHARGES</span>
+                  <span className="text-[10px] text-slate-400 font-normal block mt-0.5">
+                    GST included in agreed tariff
+                  </span>
+                </div>
                 <span className="text-xl text-blue-400">₹{totalAmount.toLocaleString('en-IN')}</span>
               </div>
             </div>

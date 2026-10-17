@@ -21,4 +21,6 @@ export const config = {
     maxFailedAttempts: 5,
     lockoutDurationMinutes: 15,
   },
+  geminiApiKey: process.env.GEMINI_API_KEY || '',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
 };

@@ -18,12 +18,16 @@ export class VehicleController {
       const status = req.query.status as string;
       const fuelType = req.query.fuelType as string;
       const transmission = req.query.transmission as string;
+      const type = (req.query.type || req.query.category) as string;
       const search = (req.query.search as string)?.trim();
 
       const where: any = { deletedAt: null };
 
       if (status && status !== 'ALL') {
         where.status = status;
+      }
+      if (type && type !== 'ALL') {
+        where.type = type.toUpperCase();
       }
       if (fuelType && fuelType !== 'ALL') {
         where.fuelType = fuelType;
@@ -37,6 +41,7 @@ export class VehicleController {
           { registrationNumber: { contains: search } },
           { make: { contains: search } },
           { model: { contains: search } },
+          { variant: { contains: search } },
         ];
       }
 
@@ -227,6 +232,7 @@ export class VehicleController {
           make: validated.make,
           model: validated.model,
           variant: validated.variant,
+          type: validated.type || 'CAR',
           year: validated.year,
           color: validated.color,
           fuelType: validated.fuelType,
@@ -287,6 +293,7 @@ export class VehicleController {
           ...(validated.make && { make: validated.make }),
           ...(validated.model && { model: validated.model }),
           ...(validated.variant !== undefined && { variant: validated.variant }),
+          ...(validated.type && { type: validated.type }),
           ...(validated.year && { year: validated.year }),
           ...(validated.color && { color: validated.color }),
           ...(validated.fuelType && { fuelType: validated.fuelType }),

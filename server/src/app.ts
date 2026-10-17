@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import fs from 'fs';
 import { config } from './config';
 import { errorHandler } from './middlewares/error.middleware';
 import authRoutes from './routes/auth.routes';
@@ -16,6 +17,7 @@ import invoiceRoutes from './routes/invoice.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import reportRoutes from './routes/report.routes';
 import settingRoutes from './routes/setting.routes';
+import aiRoutes from './routes/ai.routes';
 
 const app: Application = express();
 
@@ -68,8 +70,21 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/settings', settingRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Error Handler
 app.use(errorHandler);
+
+// Static frontend serving if client/dist exists (single-service production deployment)
+const clientDistPath = path.resolve(__dirname, '../../client/dist');
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  app.get('*', (req: Request, res: Response, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+      return next();
+    }
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 export default app;

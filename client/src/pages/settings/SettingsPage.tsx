@@ -492,7 +492,7 @@ export const SettingsPage: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  value={user?.role || ''}
+                  value={user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' ? 'Admin (Full Access)' : user?.role || 'Admin'}
                   disabled
                   className="w-full px-3.5 py-2.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/50 text-slate-500 cursor-not-allowed"
                 />

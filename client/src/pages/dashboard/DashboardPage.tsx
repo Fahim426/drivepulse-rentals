@@ -20,7 +20,32 @@ import {
   Activity,
   User,
   Plus,
+  RotateCcw,
+  ArrowRight,
 } from 'lucide-react';
+
+interface ActionButton {
+  label: string;
+  action: string;
+  url: string;
+  variant?: 'primary' | 'secondary' | 'warning';
+}
+
+interface AIDailyBriefing {
+  date: string;
+  headline: string;
+  summary: string;
+  metrics: {
+    availableVehicles: number;
+    activeRentals: number;
+    returnsToday: number;
+    pickupsToday: number;
+    pendingBalanceTotal: number;
+    expiringDocsCount: number;
+  };
+  highlights: string[];
+  actionItems: ActionButton[];
+}
 
 interface DashboardData {
   fleet: {
@@ -56,6 +81,21 @@ export const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [briefing, setBriefing] = useState<AIDailyBriefing | null>(null);
+  const [isLoadingBriefing, setIsLoadingBriefing] = useState(false);
+
+  const loadBriefing = () => {
+    setIsLoadingBriefing(true);
+    fetch('/api/ai/daily-briefing', { credentials: 'include' })
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success) {
+          setBriefing(resData.data);
+        }
+      })
+      .catch((err) => console.error('Error loading AI briefing:', err))
+      .finally(() => setIsLoadingBriefing(false));
+  };
 
   const loadSummary = () => {
     setIsLoading(true);
@@ -75,6 +115,7 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     loadSummary();
+    loadBriefing();
   }, []);
 
   if (isLoading) {
@@ -158,6 +199,103 @@ export const DashboardPage: React.FC = () => {
         <div className="absolute -right-8 -bottom-10 opacity-10 pointer-events-none text-white">
           <Car className="w-72 h-72" />
         </div>
+      </div>
+
+      {/* Feature D: AI Daily Morning Briefing Card */}
+      <div className="rounded-3xl p-6 bg-gradient-to-br from-indigo-950/90 via-slate-900 to-slate-900 border border-indigo-500/30 shadow-xl relative overflow-hidden backdrop-blur-md">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-4 pb-4 border-b border-indigo-900/40">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/30">
+              <Sparkles className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                  ✨ AI Operations Intelligence
+                </span>
+                <span className="text-xs text-slate-400 font-medium">
+                  {briefing?.date || 'Live Ops Pulse'}
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-black text-white mt-1">
+                {briefing?.headline || 'Daily Operations Pulse'}
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-3xl leading-relaxed">
+                {briefing?.summary || 'Analyzing current fleet availability, upcoming returns, and pending cashier receivables...'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={loadBriefing}
+            disabled={isLoadingBriefing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-indigo-200 text-xs font-semibold backdrop-blur-md transition self-start shrink-0 disabled:opacity-50"
+            title="Refresh AI briefing"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 ${isLoadingBriefing ? 'animate-spin' : ''}`} />
+            <span>{isLoadingBriefing ? 'Analyzing...' : 'Refresh AI Pulse'}</span>
+          </button>
+        </div>
+
+        {/* Quick Operational Metrics Row */}
+        {briefing && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4">
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Available Fleet</span>
+              <p className="text-lg font-black text-emerald-400 mt-0.5">{briefing.metrics.availableVehicles} Ready</p>
+            </div>
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Returns Today</span>
+              <p className="text-lg font-black text-blue-400 mt-0.5">{briefing.metrics.returnsToday} Due</p>
+            </div>
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Pending Receivables</span>
+              <p className="text-lg font-black text-amber-400 mt-0.5">₹{briefing.metrics.pendingBalanceTotal.toLocaleString('en-IN')}</p>
+            </div>
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
+              <span className="text-[10px] uppercase font-bold text-slate-400">Expiring Docs (&lt;15d)</span>
+              <p className="text-lg font-black text-rose-400 mt-0.5">{briefing.metrics.expiringDocsCount} Urgent</p>
+            </div>
+          </div>
+        )}
+
+        {/* Key Highlights & Suggested Actions */}
+        {briefing && briefing.highlights.length > 0 && (
+          <div className="space-y-2 pt-1 text-xs">
+            {briefing.highlights.map((h, i) => (
+              <div key={i} className="flex items-start gap-2 text-slate-200">
+                <span className="text-indigo-400 font-bold shrink-0">•</span>
+                <span className="leading-relaxed">{renderBoldText(h)}</span>
+              </div>
+            ))}
+
+            {briefing.actionItems.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 pt-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">
+                  Quick Actions:
+                </span>
+                {briefing.actionItems.map((act, idx) => (
+                  <Link
+                    key={idx}
+                    to={act.url}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-sm transition ${
+                      act.variant === 'primary'
+                        ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                        : act.variant === 'warning'
+                        ? 'bg-amber-600 hover:bg-amber-500 text-white'
+                        : 'bg-white/10 hover:bg-white/20 text-slate-200'
+                    }`}
+                  >
+                    <span>{act.label}</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Primary KPI Metric Cards */}
@@ -554,3 +692,18 @@ export const DashboardPage: React.FC = () => {
     </div>
   );
 };
+
+function renderBoldText(text: string) {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={index} className="font-bold text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+}
+

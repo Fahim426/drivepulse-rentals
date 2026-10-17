@@ -95,13 +95,15 @@ export class UserController {
         return sendError(res, 'User not found', 404);
       }
 
-      // Prevent self de-escalation if only one Super Admin exists
-      if (user.role === Role.SUPER_ADMIN && validated.role && validated.role !== Role.SUPER_ADMIN) {
-        const superAdminCount = await prisma.user.count({
-          where: { role: Role.SUPER_ADMIN, deletedAt: null, isActive: true },
+      // Prevent self de-escalation if only one Admin exists
+      const isAdminRole = user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN;
+      const targetIsAdmin = validated.role === Role.ADMIN || validated.role === Role.SUPER_ADMIN;
+      if (isAdminRole && validated.role && !targetIsAdmin) {
+        const adminCount = await prisma.user.count({
+          where: { role: { in: [Role.ADMIN, Role.SUPER_ADMIN] }, deletedAt: null, isActive: true },
         });
-        if (superAdminCount <= 1) {
-          return sendError(res, 'Cannot change role. At least one active Super Admin must exist.', 400);
+        if (adminCount <= 1) {
+          return sendError(res, 'Cannot change role. At least one active Admin must exist.', 400);
         }
       }
 
@@ -190,12 +192,12 @@ export class UserController {
         return sendError(res, 'User not found', 404);
       }
 
-      if (user.role === Role.SUPER_ADMIN) {
-        const superAdminCount = await prisma.user.count({
-          where: { role: Role.SUPER_ADMIN, deletedAt: null },
+      if (user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN) {
+        const adminCount = await prisma.user.count({
+          where: { role: { in: [Role.ADMIN, Role.SUPER_ADMIN] }, deletedAt: null },
         });
-        if (superAdminCount <= 1) {
-          return sendError(res, 'Cannot delete the only Super Admin in the system', 400);
+        if (adminCount <= 1) {
+          return sendError(res, 'Cannot delete the only Admin in the system', 400);
         }
       }
 

@@ -61,6 +61,7 @@ export interface Booking {
     make: string;
     model: string;
     variant?: string;
+    type?: 'CAR' | 'BIKE' | 'SCOOTER';
     year: number;
     fuelType: string;
     transmission?: string;
@@ -130,6 +131,7 @@ export interface AvailableVehicle {
   make: string;
   model: string;
   variant?: string;
+  type?: 'CAR' | 'BIKE' | 'SCOOTER';
   year: number;
   color: string;
   fuelType: string;

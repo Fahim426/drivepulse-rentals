@@ -262,8 +262,9 @@ export const BookingListPage: React.FC = () => {
 
                     <div className="flex items-center justify-between text-xs">
                       <div>
-                        <span className="font-bold text-slate-900 dark:text-white block">
-                          {booking.vehicle.make} {booking.vehicle.model}
+                        <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <span>{booking.vehicle.type === 'BIKE' ? '🏍️' : booking.vehicle.type === 'SCOOTER' ? '🛵' : '🚗'}</span>
+                          <span>{booking.vehicle.make} {booking.vehicle.model}</span>
                         </span>
                         <span className="inline-block mt-0.5 font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                           {booking.vehicle.registrationNumber}
@@ -388,8 +389,9 @@ export const BookingListPage: React.FC = () => {
 
                         {/* Vehicle */}
                         <td className="py-4 px-4">
-                          <div className="font-bold text-slate-800 dark:text-slate-200">
-                            {booking.vehicle.make} {booking.vehicle.model}
+                          <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                            <span>{booking.vehicle.type === 'BIKE' ? '🏍️' : booking.vehicle.type === 'SCOOTER' ? '🛵' : '🚗'}</span>
+                            <span>{booking.vehicle.make} {booking.vehicle.model}</span>
                           </div>
                           <span className="inline-block mt-0.5 font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                             {booking.vehicle.registrationNumber}

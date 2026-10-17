@@ -11,7 +11,7 @@ interface PickupInspectionModalProps {
   onSuccess: () => void;
 }
 
-const ACCESSORIES_LIST = [
+const CAR_ACCESSORIES = [
   'Spare Tyre / Wheel',
   'Jack & Handle',
   'Wheel Spanner / Tool Kit',
@@ -21,6 +21,16 @@ const ACCESSORIES_LIST = [
   'Emergency Hazard Triangle',
 ];
 
+const TWO_WHEELER_ACCESSORIES = [
+  'Rider Safety Helmet (DOT/ISI)',
+  'Pillion Safety Helmet',
+  'Under-Seat Tool Kit',
+  'RC Smart Card Copy',
+  'Rearview Mirrors (Left & Right)',
+  'First Aid Kit',
+  'Handlebar Mobile Mount',
+];
+
 export const PickupInspectionModal: React.FC<PickupInspectionModalProps> = ({
   booking,
   isOpen,
@@ -28,16 +38,28 @@ export const PickupInspectionModal: React.FC<PickupInspectionModalProps> = ({
   onSuccess,
 }) => {
   const { addToast } = useToast();
+  const isTwoWheeler = booking.vehicle.type === 'BIKE' || booking.vehicle.type === 'SCOOTER';
+  const accessoriesList = isTwoWheeler ? TWO_WHEELER_ACCESSORIES : CAR_ACCESSORIES;
+
   const [odometer, setOdometer] = useState<number>(booking.vehicle.odometer || 0);
   const [fuelLevel, setFuelLevel] = useState<'0/4' | '1/4' | '2/4' | '3/4' | '4/4'>('4/4');
   const [damageNotes, setDamageNotes] = useState('');
-  const [selectedAccessories, setSelectedAccessories] = useState<string[]>([
-    'Spare Tyre / Wheel',
-    'Jack & Handle',
-    'Wheel Spanner / Tool Kit',
-    'RC Smart Card Copy',
-    'Fastag Electronic Tag',
-  ]);
+  const [selectedAccessories, setSelectedAccessories] = useState<string[]>(() =>
+    isTwoWheeler
+      ? [
+          'Rider Safety Helmet (DOT/ISI)',
+          'Under-Seat Tool Kit',
+          'RC Smart Card Copy',
+          'Rearview Mirrors (Left & Right)',
+        ]
+      : [
+          'Spare Tyre / Wheel',
+          'Jack & Handle',
+          'Wheel Spanner / Tool Kit',
+          'RC Smart Card Copy',
+          'Fastag Electronic Tag',
+        ]
+  );
   const [customerSignature, setCustomerSignature] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -193,7 +215,7 @@ export const PickupInspectionModal: React.FC<PickupInspectionModalProps> = ({
               Handover Accessories Checklist
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {ACCESSORIES_LIST.map((acc) => {
+              {accessoriesList.map((acc) => {
                 const checked = selectedAccessories.includes(acc);
                 return (
                   <label

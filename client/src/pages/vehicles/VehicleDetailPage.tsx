@@ -173,12 +173,21 @@ export const VehicleDetailPage: React.FC = () => {
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                 {vehicle.make} {vehicle.model}
               </h1>
               <span className="font-mono text-sm font-extrabold px-2.5 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                 {vehicle.registrationNumber}
+              </span>
+              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                vehicle.type === 'BIKE'
+                  ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                  : vehicle.type === 'SCOOTER'
+                  ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                  : 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+              }`}>
+                {vehicle.type === 'BIKE' ? '🏍️ Bike' : vehicle.type === 'SCOOTER' ? '🛵 Scooter' : '🚗 Car'}
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">

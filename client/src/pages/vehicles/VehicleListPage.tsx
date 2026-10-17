@@ -32,6 +32,7 @@ export const VehicleListPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [fuelFilter, setFuelFilter] = useState('ALL');
+  const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -45,6 +46,7 @@ export const VehicleListPage: React.FC = () => {
         ...(search && { search }),
         ...(statusFilter !== 'ALL' && { status: statusFilter }),
         ...(fuelFilter !== 'ALL' && { fuelType: fuelFilter }),
+        ...(categoryFilter !== 'ALL' && { type: categoryFilter }),
       });
 
       const res = await api.get<{ vehicles: Vehicle[] }>(`/vehicles?${params.toString()}`);
@@ -58,7 +60,7 @@ export const VehicleListPage: React.FC = () => {
 
   useEffect(() => {
     fetchVehicles();
-  }, [search, statusFilter, fuelFilter]);
+  }, [search, statusFilter, fuelFilter, categoryFilter]);
 
   const handleDeleteVehicle = async (v: Vehicle) => {
     if (!window.confirm(`Are you sure you want to deactivate and remove ${v.make} ${v.model} (${v.registrationNumber}) from active fleet?`)) {
@@ -98,6 +100,30 @@ export const VehicleListPage: React.FC = () => {
         return (
           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300 border border-slate-300">
             INACTIVE
+          </span>
+        );
+    }
+  };
+
+  const getCategoryBadge = (type?: string) => {
+    switch (type) {
+      case 'BIKE':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shadow-sm">
+            🏍️ Bike
+          </span>
+        );
+      case 'SCOOTER':
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shadow-sm">
+            🛵 Scooter
+          </span>
+        );
+      case 'CAR':
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-sm">
+            🚗 Car
           </span>
         );
     }
@@ -147,6 +173,28 @@ export const VehicleListPage: React.FC = () => {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Category Filter Tabs: All, Cars, Bikes, Scooters */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {[
+          { id: 'ALL', label: 'All Fleet' },
+          { id: 'CAR', label: '🚗 Cars' },
+          { id: 'BIKE', label: '🏍️ Bikes' },
+          { id: 'SCOOTER', label: '🛵 Scooters' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setCategoryFilter(tab.id)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap flex items-center gap-2 shadow-sm ${
+              categoryFilter === tab.id
+                ? 'bg-indigo-600 text-white shadow-indigo-600/30'
+                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            <span>{tab.label}</span>
+          </button>
+        ))}
       </div>
 
       {/* Search and Filters Bar */}
@@ -220,12 +268,33 @@ export const VehicleListPage: React.FC = () => {
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {isLoading ? (
-            <div className="col-span-full py-12 text-center text-slate-400 text-xs">
+            <div className="col-span-full py-16 text-center text-slate-400 text-xs">
+              <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
               Loading fleet vehicles...
             </div>
           ) : vehicles.length === 0 ? (
-            <div className="col-span-full py-12 text-center text-slate-400 text-xs">
-              No vehicles found matching current filters.
+            <div className="col-span-full py-16 px-4 text-center bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3 text-2xl shadow-sm">
+                🚗
+              </div>
+              <h3 className="font-bold text-slate-800 dark:text-slate-200 text-base">No vehicles in fleet yet</h3>
+              <p className="text-xs text-slate-400 mt-1 max-w-md mx-auto">
+                {search || statusFilter !== 'ALL' || fuelFilter !== 'ALL' || categoryFilter !== 'ALL'
+                  ? 'No vehicles match your active search filters. Try clearing filters.'
+                  : 'Your fleet is currently empty. Add your cars, bikes, or scooters manually to begin managing rentals.'}
+              </p>
+              {!search && statusFilter === 'ALL' && fuelFilter === 'ALL' && categoryFilter === 'ALL' && (
+                <button
+                  onClick={() => {
+                    setEditingVehicle(null);
+                    setShowAddModal(true);
+                  }}
+                  className="mt-4 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-2 shadow-md shadow-indigo-600/20 transition"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add First Vehicle</span>
+                </button>
+              )}
             </div>
           ) : (
             vehicles.map((v) => {
@@ -246,8 +315,9 @@ export const VehicleListPage: React.FC = () => {
                       alt={`${v.make} ${v.model}`}
                       className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                     />
-                    <div className="absolute top-3 left-3 flex gap-2">
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
                       {getStatusBadge(v.status)}
+                      {getCategoryBadge(v.type)}
                     </div>
 
                     {/* Compliance Alert Ribbon */}
@@ -382,8 +452,11 @@ export const VehicleListPage: React.FC = () => {
                   </tr>
                 ) : vehicles.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-slate-400">
-                      No vehicles found.
+                    <td colSpan={7} className="py-12 text-center text-slate-400">
+                      <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">No vehicles registered yet</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Click "Add Vehicle" to register your cars, bikes, or scooters manually.
+                      </p>
                     </td>
                   </tr>
                 ) : (
@@ -393,7 +466,10 @@ export const VehicleListPage: React.FC = () => {
                       className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
                     >
                       <td className="py-3 px-4 font-semibold text-slate-900 dark:text-white">
-                        {v.make} {v.model}
+                        <div className="flex items-center gap-2">
+                          <span>{v.make} {v.model}</span>
+                          {getCategoryBadge(v.type)}
+                        </div>
                         <p className="text-[10px] text-slate-400 font-normal">{v.variant || 'Standard'}</p>
                       </td>
                       <td className="py-3 px-4 font-mono font-bold text-slate-800 dark:text-slate-200">

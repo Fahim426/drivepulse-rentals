@@ -14,9 +14,10 @@ const vehicleFormSchema = z.object({
   variant: z.string().optional(),
   year: z.coerce.number().min(1990).max(new Date().getFullYear() + 1),
   color: z.string().min(1, 'Color is required'),
+  type: z.enum(['CAR', 'BIKE', 'SCOOTER']).default('CAR'),
   fuelType: z.enum(['Petrol', 'Diesel', 'Electric', 'Hybrid', 'CNG']),
   transmission: z.enum(['Manual', 'Automatic']),
-  seats: z.coerce.number().int().min(2).max(15),
+  seats: z.coerce.number().int().min(1, 'Minimum 1 seat').max(15),
   chassisNumber: z.string().min(4, 'Chassis number is required'),
   engineNumber: z.string().min(4, 'Engine number is required'),
   odometer: z.coerce.number().optional().default(0),
@@ -54,6 +55,8 @@ export const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleFormSchema),
@@ -65,6 +68,7 @@ export const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
           variant: vehicle.variant || '',
           year: vehicle.year,
           color: vehicle.color,
+          type: (vehicle.type as any) || 'CAR',
           fuelType: vehicle.fuelType,
           transmission: vehicle.transmission,
           seats: vehicle.seats,
@@ -86,6 +90,7 @@ export const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
           variant: '',
           year: new Date().getFullYear(),
           color: '',
+          type: 'CAR',
           fuelType: 'Petrol',
           transmission: 'Manual',
           seats: 5,
@@ -177,6 +182,33 @@ export const VehicleFormModal: React.FC<VehicleFormModalProps> = ({
               <span>Vehicle Identification & Specs</span>
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  Fleet Category *
+                </label>
+                <select
+                  {...register('type')}
+                  onChange={(e) => {
+                    const val = e.target.value as 'CAR' | 'BIKE' | 'SCOOTER';
+                    setValue('type', val);
+                    if (val === 'BIKE') {
+                      setValue('seats', 2);
+                      setValue('transmission', 'Manual');
+                    } else if (val === 'SCOOTER') {
+                      setValue('seats', 2);
+                      setValue('transmission', 'Automatic');
+                    } else if (val === 'CAR') {
+                      setValue('seats', 5);
+                    }
+                  }}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-slate-900 dark:text-white"
+                >
+                  <option value="CAR">🚗 Car</option>
+                  <option value="BIKE">🏍️ Bike</option>
+                  <option value="SCOOTER">🛵 Scooter</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Registration Number *

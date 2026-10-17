@@ -347,9 +347,20 @@ export const BookingDetailPage: React.FC = () => {
 
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-slate-900 dark:text-white">
-                {booking.vehicle.make} {booking.vehicle.model}
-              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-sm font-bold text-slate-900 dark:text-white">
+                  {booking.vehicle.make} {booking.vehicle.model}
+                </span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                  booking.vehicle.type === 'BIKE'
+                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+                    : booking.vehicle.type === 'SCOOTER'
+                    ? 'bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+                    : 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+                }`}>
+                  {booking.vehicle.type === 'BIKE' ? '🏍️ Bike' : booking.vehicle.type === 'SCOOTER' ? '🛵 Scooter' : '🚗 Car'}
+                </span>
+              </div>
               <span className="font-mono text-xs px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 font-bold border border-blue-200 dark:border-blue-800">
                 {booking.vehicle.registrationNumber}
               </span>
@@ -480,10 +491,17 @@ export const BookingDetailPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="flex justify-between text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <span>GST Tax (18%)</span>
-                <span>₹{booking.taxAmount.toLocaleString('en-IN')}</span>
-              </div>
+              {booking.taxAmount > 0 ? (
+                <div className="flex justify-between text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <span>GST Tax ({booking.taxPercentage || 18}%)</span>
+                  <span>₹{booking.taxAmount.toLocaleString('en-IN')}</span>
+                </div>
+              ) : (
+                <div className="flex justify-between text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <span>GST</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Included in Tariff</span>
+                </div>
+              )}
 
               <div className="flex justify-between items-center text-sm font-bold text-slate-900 dark:text-white pt-2 border-t border-slate-100 dark:border-slate-800">
                 <span>TOTAL RENTAL CHARGES</span>

@@ -76,9 +76,9 @@ export const LoginPage: React.FC = () => {
 
         <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl">
           <div className="mb-6">
-            <h3 className="text-xl font-bold text-white">Staff Sign In</h3>
+            <h3 className="text-xl font-bold text-white">Admin Sign In</h3>
             <p className="text-xs text-slate-400 mt-1">
-              Enter your authorized admin credentials to access the fleet console.
+              Enter your administrator credentials to access the fleet management console.
             </p>
           </div>
 
@@ -150,7 +150,7 @@ export const LoginPage: React.FC = () => {
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <>
-                  <span>Sign In to DrivePulse</span>
+                  <span>Sign In as Admin</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -160,36 +160,18 @@ export const LoginPage: React.FC = () => {
           {/* Quick Demo Fill Buttons */}
           <div className="mt-8 pt-6 border-t border-slate-800">
             <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center mb-3">
-              Demo One-Click Sign In
+              One-Click Admin Sign In
             </p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleQuickFill('admin@drivepulse.com')}
-                className="py-2 px-2.5 rounded-xl text-xs font-medium bg-slate-800/80 hover:bg-slate-700/80 text-purple-300 border border-purple-500/20 text-center transition flex flex-col items-center gap-1"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                <span>Super Admin</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('manager@drivepulse.com')}
-                className="py-2 px-2.5 rounded-xl text-xs font-medium bg-slate-800/80 hover:bg-slate-700/80 text-blue-300 border border-blue-500/20 text-center transition flex flex-col items-center gap-1"
-              >
-                <KeyRound className="w-3.5 h-3.5 text-blue-400" />
-                <span>Manager</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('staff@drivepulse.com')}
-                className="py-2 px-2.5 rounded-xl text-xs font-medium bg-slate-800/80 hover:bg-slate-700/80 text-emerald-300 border border-emerald-500/20 text-center transition flex flex-col items-center gap-1"
-              >
-                <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Staff</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => handleQuickFill('admin@drivepulse.com')}
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold bg-slate-800/80 hover:bg-slate-700/80 text-purple-300 border border-purple-500/30 text-center transition flex items-center justify-center gap-2 shadow-sm"
+            >
+              <Sparkles className="w-4 h-4 text-purple-400" />
+              <span>Fill Admin Credentials (admin@drivepulse.com)</span>
+            </button>
             <p className="text-[10px] text-slate-500 text-center mt-2.5">
-              Default password for all accounts: <span className="font-mono text-slate-400">Password@123</span>
+              Default password: <span className="font-mono text-slate-400">Password@123</span>
             </p>
           </div>
         </div>

@@ -13,7 +13,7 @@ model User {
   passwordHash         String
   fullName             String
   phone                String?
-  role                 String     @default("STAFF") // SUPER_ADMIN, MANAGER, STAFF
+  role                 String     @default("ADMIN") // ADMIN, SUPER_ADMIN, MANAGER, STAFF
   isActive             Boolean    @default(true)
   failedLoginAttempts  Int        @default(0)
   lockedUntil          DateTime?
@@ -56,6 +56,7 @@ model Vehicle {
   variant            String?
   year               Int
   color              String
+  type               String           @default("CAR") // CAR, BIKE, SCOOTER
   fuelType           String           @default("Petrol") // Petrol, Diesel, Electric, Hybrid, CNG
   transmission       String           @default("Manual") // Manual, Automatic
   seats              Int              @default(5)

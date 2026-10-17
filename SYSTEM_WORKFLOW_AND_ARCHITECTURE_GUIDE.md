@@ -5,10 +5,10 @@
 
 ## 1. Executive Summary & System Overview
 
-**DrivePulse** is a production-grade, full-stack Car Rental Management web application engineered specifically for **internal administrative and operational staff** of a car rental business. It manages the entire lifecycle of rental operations—from vehicle onboarding and compliance tracking to customer onboarding, negotiated booking dispatch, digital vehicle inspections, payments, GST invoicing, and executive analytics.
+**DrivePulse** is a production-grade, full-stack Vehicle Rental Management web application engineered specifically for the **business administrator** of a rental business. It manages the entire lifecycle of rental operations—from multi-category vehicle onboarding and compliance tracking to customer onboarding, negotiated booking dispatch, digital vehicle inspections, payments, GST invoicing, and executive analytics.
 
 ### Key Business Model & Operational Principles:
-1. **Admin Staff Only**: Not a public marketplace; designed strictly for internal staff (Super Admins, Operations Managers, and Counter Staff) with strict Role-Based Access Control (RBAC).
+1. **Admin-Only Architecture**: Designed specifically for client operations with a unified **Administrator (`ADMIN`)** model. All modules, fleet controls, compliance overrides, and financial settings are fully managed by the Admin without multi-role friction.
 2. **Dynamic / Negotiated Rental Pricing**: Vehicles do not enforce rigid, fixed daily tariffs. Instead, tariffs are negotiated manually with customers based on **passenger count**, route, and duration.
 3. **Frictionless Customer Walk-ins**: Counter staff can book rentals immediately by manually typing customer details on the fly or selecting pre-registered customers from the directory.
 4. **Zero Odometer Clutter**: Odometer readings are captured only during physical dispatch and return inspections, eliminating maintenance clutter from general fleet overview views.
@@ -88,22 +88,23 @@ sequenceDiagram
     end
 ```
 
-#### Roles & Permissions Matrix:
-| Capability / Feature | Super Admin | Operations Manager | Counter Staff |
-| :--- | :---: | :---: | :---: |
-| View Dashboard & Fleet Summary | Yes | Yes | Yes |
-| Create & Dispatch Bookings | Yes | Yes | Yes |
-| Record Inspections & Signatures | Yes | Yes | Yes |
-| Collect Advance & Balance Payments | Yes | Yes | Yes |
-| Enter Customers Manually | Yes | Yes | Yes |
-| Authorize Compliance Document Override | Yes | Yes | **Blocked** |
-| Bypass Outstanding Balance at Handover | Yes | Yes | **Blocked** |
-| Add / Edit / Deactivate Fleet Vehicles | Yes | Yes | **Blocked** |
-| Upload & Renew Vehicle Compliance Docs | Yes | Yes | **Blocked** |
-| Blacklist / Unblacklist Customers | Yes | Yes | **Blocked** |
-| System Settings & Tariff Rules | Yes | **Read-only** | **Blocked** |
-| Staff User Management (`/users`) | Yes | **Blocked** | **Blocked** |
-| Security Audit Trail Logs (`/audit`) | Yes | **Blocked** | **Blocked** |
+#### Roles & Permissions Architecture:
+The system operates on an **Admin-Centric model** where the business administrator (`ADMIN`) has universal, complete access across all capabilities:
+
+| Capability / Feature | Admin (`ADMIN`) |
+| :--- | :---: |
+| View Dashboard & Fleet Summary | **Full Access** |
+| Create & Dispatch Bookings | **Full Access** |
+| Record Inspections & Signatures | **Full Access** |
+| Collect Advance & Balance Payments | **Full Access** |
+| Enter Customers Manually | **Full Access** |
+| Authorize Compliance Document Override | **Full Access** |
+| Bypass Outstanding Balance at Handover | **Full Access** |
+| Add / Edit / Deactivate Fleet Vehicles | **Full Access** |
+| Upload & Renew Vehicle Compliance Docs | **Full Access** |
+| Blacklist / Unblacklist Customers | **Full Access** |
+| System Settings & Tariff Rules | **Full Access** |
+| Security Audit Trail Logs (`/audit`) | **Full Access** |
 
 ---
 
@@ -122,12 +123,10 @@ flowchart TD
     FetchCandidate --> CheckDocs{Mandatory Docs Valid?\nInsurance, Fitness, PUC}
     CheckDocs -- All Valid --> AllowBooking[Vehicle Available for Booking]
     CheckDocs -- One or More Expired --> FlagBlocked[Mark as Compliance Blocked]
-    FlagBlocked --> CheckUserRole{User Role?}
-    CheckUserRole -- STAFF --> BlockStaff[Staff Blocked: Cannot Assign Vehicle]
-    CheckUserRole -- MANAGER / SUPER_ADMIN --> RequireOverride[Require Manager Override Checkbox\n+ Documented Override Justification]
+    FlagBlocked --> RequireOverride[Require Admin Override Checkbox\n+ Documented Override Justification]
     RequireOverride --> OverrideProvided{Reason >= 5 chars?}
     OverrideProvided -- Yes --> LogAudit[Log Security Audit Trail\nProceed with Booking]
-    OverrideProvided -- No --> BlockManager[Validation Error: Reason Required]
+    OverrideProvided -- No --> BlockAdmin[Validation Error: Reason Required]
 ```
 
 ---
@@ -151,7 +150,7 @@ sequenceDiagram
     DB-->>BookingUI: Return available vehicles with seat capacity
     CounterStaff->>BookingUI: Select vehicle (e.g. 7 Seater Innova)
     CounterStaff->>BookingUI: Enter Agreed Rental Amount (e.g. ₹6,500 based on 6 people)
-    BookingUI->>BookingUI: Live Quotation calculates 18% GST (₹1,170), Net Total (₹7,670)
+    BookingUI->>BookingUI: Live Quotation displays Total Rental (₹6,500, GST already included in tariff)
     CounterStaff->>BookingUI: Enter Initial Advance Collected (e.g. ₹2,000)
     CounterStaff->>BookingUI: Click "Confirm & Schedule Booking"
     BookingUI->>API: POST /api/bookings (Manual Customer + Rent)
@@ -264,8 +263,8 @@ Every rupee through the system is auditable and tracked under formal financial s
 ```
 
 ### Core Entities:
-1. **User**: Staff credentials, salted password hash, assigned role (`SUPER_ADMIN`, `MANAGER`, `STAFF`), and active session tokens.
-2. **Vehicle**: Make, model, year, registration number, fuel type, transmission, seating capacity, security deposit, status (`AVAILABLE`, `RENTED`, `MAINTENANCE`, `INACTIVE`), and chassis/engine numbers.
+1. **User**: Administrator credentials, salted password hash, assigned role (`ADMIN`), and active session tokens.
+2. **Vehicle**: Multi-category fleet asset tracking cars, bikes, and scooters. Attributes include category `type` (`CAR`, `BIKE`, `SCOOTER`), make, model, variant, year, registration number, fuel type, transmission, seating capacity (1–15 seats), security deposit, status (`AVAILABLE`, `RENTED`, `MAINTENANCE`, `INACTIVE`), and chassis/engine numbers.
 3. **VehicleDocument**: Legal compliance certificates (Insurance, Fitness, PUC, RC, Permit) with issue dates, expiry dates, policy details, and validity status.
 4. **Customer**: Full name, phone, alternate contact, address, KYC verification status, and blacklist status with documented violation reasons.
 5. **CustomerDocument**: Driving licence, Aadhaar, Passport, or Voter ID records with document numbers, verification status, and expiry tracking.
@@ -355,10 +354,9 @@ npm run test
 npm run build
 ```
 
-### Pre-Configured Test Staff Credentials:
-* **Super Admin**: `admin@drivepulse.com` / `Password@123`
-* **Operations Manager**: `manager@drivepulse.com` / `Password@123`
-* **Counter Staff**: `staff@drivepulse.com` / `Password@123`
+### Pre-Configured Administrator Credentials:
+* **Admin**: `admin@drivepulse.com` / `Password@123`
+*(Sole active administrative login; manager and staff roles are disabled and not needed).*
 
 ---
 
@@ -506,9 +504,10 @@ Once deployed, provide the client with the live URL and the pre-configured test 
    * Navigate to `/payments`.
    * Click **Generate Tax Invoice** or download the **Payment Receipt PDF**.
    * Open the PDF to inspect the statutory Indian GST layout (HSN/SAC `996601`, 9% CGST, 9% SGST, signature verification, and official letterhead).
-5. **Role-Based Security Validation**:
-   * Log out and log in with Counter Staff credentials (`staff@drivepulse.com` / `Password@123`).
-   * Attempt to release a vehicle with an outstanding balance or override an expired insurance certificate; verify that the system blocks unauthorized overrides and demands Manager approval.
+5. **Fresh Deployment & Admin-Only Security**:
+   * Log in with Admin credentials (`admin@drivepulse.com` / `Password@123`).
+   * Verify that the database starts completely fresh (0 vehicles, 0 test customers, 0 dummy bookings).
+   * Click **Add Vehicle** on `/vehicles` to manually register your first car, bike, or scooter with custom tariffs and compliance documents.
 
 ---
 
@@ -516,8 +515,8 @@ Once deployed, provide the client with the live URL and the pre-configured test 
 
 #### Server (`server/.env`):
 ```env
-# Database (Neon PostgreSQL Free Tier)
-DATABASE_URL="postgresql://user:password@ep-xyz.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+# Database (SQLite default or Neon PostgreSQL Free Tier)
+DATABASE_URL="file:./dev.db"
 
 # Server Port & Mode
 PORT=5000

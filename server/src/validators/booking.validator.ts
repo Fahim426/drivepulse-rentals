@@ -24,6 +24,7 @@ export const createBookingSchema = z
     withDriver: z.boolean().default(false),
     driverAllowancePerDay: z.number().min(0).default(0),
     discountAmount: z.number().min(0).default(0),
+    taxPercentage: z.number().min(0).max(100).optional(),
     advancePaid: z.number().min(0).default(0),
     status: z.enum(['QUOTE', 'CONFIRMED']).default('CONFIRMED'),
     managerOverrideCompliance: z.boolean().default(false),
@@ -85,5 +86,7 @@ export const checkAvailabilitySchema = z.object({
   pickupDateTime: z.string(),
   returnDateTime: z.string(),
   vehicleType: z.string().optional(),
+  type: z.string().optional(),
+  category: z.string().optional(),
   excludeBookingId: z.string().optional(),
 });

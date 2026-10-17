@@ -8,6 +8,7 @@ import { CustomerFormModal } from '../../components/customers/CustomerFormModal'
 import { BlacklistModal } from '../../components/customers/BlacklistModal';
 import {
   UserPlus,
+  Users,
   Search,
   Star,
   ShieldAlert,
@@ -288,8 +289,12 @@ export const CustomerListPage: React.FC = () => {
                 </tr>
               ) : customers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400">
-                    No customers found.
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                    <Users className="w-10 h-10 mx-auto mb-2 text-slate-300 dark:text-slate-700" />
+                    <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">No customers registered yet</p>
+                    <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                      Customers will be recorded automatically when dispatching bookings, or you can add them manually.
+                    </p>
                   </td>
                 </tr>
               ) : (

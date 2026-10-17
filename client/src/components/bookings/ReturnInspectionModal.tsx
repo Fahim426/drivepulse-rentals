@@ -272,7 +272,11 @@ export const ReturnInspectionModal: React.FC<ReturnInspectionModalProps> = ({
               rows={2}
               value={damageNotes}
               onChange={(e) => setDamageNotes(e.target.value)}
-              placeholder="e.g. Returned clean, spare tyre intact, minor scratch on left mirror."
+              placeholder={
+                booking.vehicle.type === 'BIKE' || booking.vehicle.type === 'SCOOTER'
+                  ? 'e.g. Returned clean, helmets intact, chain lubricated, minor scratch on exhaust guard.'
+                  : 'e.g. Returned clean, spare tyre intact, minor scratch on left door.'
+              }
               className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
             />
           </div>

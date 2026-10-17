@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useSessionTimeout } from '../../hooks/useSessionTimeout';
+import { AICopilotModal } from '../ai/AICopilotModal';
 import {
   LayoutDashboard,
   Car,
@@ -30,6 +31,7 @@ export const AppLayout: React.FC = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
+  const [isAiOpen, setIsAiOpen] = useState(false);
 
   // 30 min session timeout with 2 min warning
   const { showWarning, remainingSeconds, resetActivity } = useSessionTimeout({
@@ -49,39 +51,16 @@ export const AppLayout: React.FC = () => {
     { name: 'Bookings', path: '/bookings', icon: CalendarCheck },
     { name: 'Payments', path: '/payments', icon: CreditCard },
     { name: 'Reports', path: '/reports', icon: BarChart3 },
-    ...(hasRole('SUPER_ADMIN')
-      ? [{ name: 'Staff Users', path: '/users', icon: UserCog }]
-      : []),
-    ...(hasRole('SUPER_ADMIN', 'MANAGER')
-      ? [
-          { name: 'Audit Logs', path: '/audit-logs', icon: FileSpreadsheet },
-          { name: 'Settings', path: '/settings', icon: Settings },
-        ]
-      : []),
+    { name: 'Audit Logs', path: '/audit-logs', icon: FileSpreadsheet },
+    { name: 'Settings', path: '/settings', icon: Settings },
   ];
 
   const getRoleBadge = (role?: string) => {
-    switch (role) {
-      case 'SUPER_ADMIN':
-        return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-            <Sparkles className="w-3 h-3" /> Super Admin
-          </span>
-        );
-      case 'MANAGER':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-            Manager
-          </span>
-        );
-      case 'STAFF':
-      default:
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-            Staff
-          </span>
-        );
-    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+        <Sparkles className="w-3 h-3" /> Admin
+      </span>
+    );
   };
 
   return (
@@ -169,6 +148,16 @@ export const AppLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* AI Copilot Launch Button */}
+            <button
+              onClick={() => setIsAiOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600/10 to-violet-600/10 hover:from-indigo-600/20 hover:to-violet-600/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 text-xs font-bold transition shadow-sm"
+              title="Ask AI Operations Copilot"
+            >
+              <Sparkles className="w-3.5 h-3.5 animate-pulse text-indigo-600 dark:text-indigo-400" />
+              <span className="hidden sm:inline">AI Copilot</span>
+            </button>
+
             {/* Dark mode toggle */}
             <button
               onClick={toggleTheme}
@@ -191,7 +180,7 @@ export const AppLayout: React.FC = () => {
             <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-slate-800">
               <div className="text-right">
                 <p className="text-xs font-semibold leading-tight">{user?.fullName}</p>
-                <p className="text-[10px] text-slate-400 font-medium">{user?.role}</p>
+                <p className="text-[10px] text-slate-400 font-medium">Admin</p>
               </div>
             </div>
           </div>
@@ -390,6 +379,20 @@ export const AppLayout: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Floating AI Assistant Trigger Button (Bottom Right) */}
+      <button
+        onClick={() => setIsAiOpen(true)}
+        className="fixed bottom-20 sm:bottom-6 right-6 z-40 p-3.5 rounded-full bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-700 text-white shadow-xl shadow-indigo-600/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 group border border-white/20"
+        title="Ask DrivePulse AI"
+      >
+        <Sparkles className="w-5 h-5 animate-pulse" />
+        <span className="hidden md:inline font-bold text-xs pr-1">Ask AI</span>
+        <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white dark:border-slate-900 animate-ping" />
+        <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
+      </button>
+
+      {/* AI Copilot Drawer Modal */}
+      <AICopilotModal isOpen={isAiOpen} onClose={() => setIsAiOpen(false)} />
     </div>
   );
 };

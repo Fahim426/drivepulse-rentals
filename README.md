@@ -1,61 +1,53 @@
-# 🚗 DrivePulse — Production Car Rental Management Web Application
+# 🚗 DrivePulse — AI-Powered Vehicle Rental Management System
 
-**DrivePulse** is an enterprise-grade Car Rental Fleet & Operations Management system designed exclusively for administrative, management, and cashier staff of a single rental car business. Built with a modern, high-performance TypeScript stack, it streamlines fleet operations, regulatory compliance, customer KYC verification, rental booking lifecycles, vehicle inspection checklists with customer signatures, GST-compliant tax invoicing, security deposit reconciliations, and auditable analytics.
+**DrivePulse** is an enterprise-grade Vehicle Rental Fleet & Operations Management system engineered for rental businesses managing **Cars, Bikes, and Scooters**. Built with a modern, high-performance TypeScript stack, it features an **AI-Powered Fleet Copilot**, real-time operations dashboards, customer KYC management, digital inspection checklists with touch customer signatures, dynamic people-based custom tariffs, GST-compliant tax invoicing, security deposit reconciliations, and auditable analytics.
 
 ---
 
 ## 🌟 Key Features
 
-### 1. Enterprise Authentication, RBAC & Audit Trail
-- **JWT in httpOnly Cookies**: Dual access (15 min) and refresh (7 days) tokens stored securely in `httpOnly`, `sameSite: lax` cookies with authorization header fallback.
-- **Three-Tier Role-Based Access Control**:
-  - 👑 **Super Admin**: Full root authority across user management, deletion permissions, and system configurations.
-  - 🛡️ **Manager**: Operational authority including compliance document overrides, rate adjustments, and invoice cancellations.
-  - 📋 **Staff / Cashier**: Front-desk operations for creating bookings, recording payments, and dispatching vehicles.
-- **Account Security & Session Inactivity**: 5 failed login attempts trigger a 15-minute lockout; 30-minute idle inactivity auto-logout with a 2-minute modal countdown.
-- **Centralized Audit Logging**: Every administrative action (`CREATE`, `UPDATE`, `DELETE`, `OVERRIDE`, `LOGIN`, `LOGOUT`) is automatically logged with actor ID, IP address, user agent, and timestamp.
+### 1. 🤖 AI-Powered Operations Copilot & Daily Executive Briefing
+- **Natural Language Fleet Copilot**:
+  - Ask live operational questions via the floating AI assistant:
+    - *"Which vehicles are available right now?"*
+    - *"Is Creta available? How many days remaining on its rental?"*
+    - *"Are any vehicle insurance or fitness documents expiring soon?"*
+    - *"How much money did we collect today?"*
+    - *"Who owes us money and what are the pending balances?"*
+  - Provides rich markdown answers with direct 1-click **Quick Action** buttons (`[Dispatch Booking]`, `[View Vehicle]`, `[Collect Payment]`).
+- **✨ Feature D: Daily Executive Morning Briefing**:
+  - Top-of-dashboard intelligence card summarizing live fleet status, scheduled returns today, pending cashier receivables, and urgent compliance renewals.
+- **Dual-Engine Architecture (100% Free with Zero Downtime)**:
+  - Powered by **Google Gemini 1.5 Flash** (Free Tier via Google AI Studio).
+  - Includes a built-in **Smart Local Operations NLP Engine** that operates 100% offline with zero external dependencies if no API key is set.
 
-### 2. Vehicle Fleet & Regulatory Compliance Engine
-- **Comprehensive Fleet Registry**: Registration number, make, model, variant, year, color, fuel type, transmission, seats, VIN/chassis, and live odometer.
-- **Typed Regulatory Documents**: Automatic status tracking for `INSURANCE`, `FITNESS`, `PUC`, `RC`, `ROAD_TAX`, and `PERMIT`.
-- **Dynamic Expiration Engine**: Automatic computation of `VALID`, `EXPIRING_SOON` (within 15 days), or `EXPIRED` status.
-- **Operations Guard & Manager Override**: Unfit vehicles are blocked from new bookings unless a Manager documents a business justification.
-- **Maintenance & Expense Tracking**: Service logs, spare parts replaced, vendor invoice numbers, and operating cost ratio per vehicle.
+### 2. 🚗 🏍️ 🛵 Multi-Category Fleet (Cars, Bikes, Scooters)
+- **Categorized Fleet Registry**: Register and manage Cars, Motorcycles, and Scooters with custom seating capacities (2-seater bikes, 5-seater sedans, 7-seater SUVs).
+- **Manual Vehicle Entry**: Clean, pristine start with zero dummy vehicles; register your actual fleet manually with custom specs and compliance documents.
+- **Regulatory Compliance Engine**: Automated status computation for `INSURANCE`, `FITNESS`, `PUC`, and `RC` certificates (`VALID`, `EXPIRING_SOON` within 15 days, or `EXPIRED`).
+- **Maintenance & Expense Logs**: Service history, parts replaced, vendor bills, and per-vehicle operating cost tracking.
 
-### 3. Customer Directory & KYC ID Verification
-- **Customer CRM**: Complete customer profiles with phone, email, emergency contact, driving licence number, and city.
-- **Multi-Document KYC Processing**: Driving Licence, Aadhaar Card, Passport, Voter ID, and Selfie ID proof tracking.
-- **Licence Expiry Enforcement**: Automatically prevents reservations extending past customer driving licence validity.
-- **Blacklist Enforcement**: Documented reason banner prevents rental creation for blacklisted drivers.
+### 3. 👥 Walk-In Customers & Dynamic People-Based Pricing
+- **Manual Customer Entry**: Walk-in hirers can be entered manually during booking without mandatory prior CRM registration.
+- **Custom Negotiated Tariffs**: Dynamic pricing based on passenger count and customer negotiation rather than rigid catalog rates.
+- **Customer CRM & KYC**: Complete customer directory with Driving Licence, Aadhaar, phone, and emergency contacts.
+- **Blacklist Enforcement**: Instant blocking banners preventing rental creation for blacklisted drivers.
 
-### 4. Booking Lifecycle, Dynamic Quotes & Inspection Checklists
+### 4. 📝 Booking Lifecycle, Digital Inspections & Agreements
 - **Availability Engine**: Atomic date-range overlap queries (`pickupDateTime < requestedReturn && returnDateTime > requestedPickup`) preventing double booking.
-- **Dynamic Quotation**: Tiered daily/weekly/monthly rates, optional driver allowance (₹500/day), custom add-ons (GPS, child seat), courtesy discounts, and 18% GST.
-- **Pickup Inspection Checklist**: Fuel level (0/4 to 4/4), odometer reading, accessory checklist, exterior damage notes, and **HTML5 Canvas Customer Signature**.
-- **Return Inspection Checklist**: Odometer sync, extra kilometre penalty calculation (₹12/km), fuel penalty, damage charge, and net security deposit refund vs balance due.
-- **Professional PDF Rental Agreement**: Generated on-the-fly using `pdfkit` (`GET /api/bookings/:id/agreement-pdf`).
+- **Pickup Inspection Checklist**: Fuel level, odometer sync, damage notes, and **HTML5 Touch Canvas Customer Signature**.
+- **Return Inspection Checklist**: Odometer sync, extra KM penalty calculation (₹12/km), damage deductions, and net security deposit refund.
+- **Automated Agreement PDF**: Official rental contracts generated on-the-fly (`GET /api/bookings/:id/agreement-pdf`).
 
-### 5. Cashier Payments, Receipts & GST Tax Invoicing
-- **Payment Modes**: UPI / QR, Cash, Debit/Credit Card, Bank Transfer (IMPS/NEFT), and Cheque.
-- **Auto-Sequenced Cashier Receipts**: Format `REC-YYYY-XXXX` (e.g. `REC-2026-0004`) with atomic ledger adjustments.
-- **Official GST Tax Invoice**: Compliant with **SAC 996601** (Passenger Car Rental Services), CGST (9%) + SGST (9%), customer corporate GSTIN validation for Input Tax Credit (ITC), and sequential `INV-YYYY-XXXX` numbering.
-- **Security Deposit Ledger**: Real-time tracking of active held deposits, refunded amounts, and damage deductions.
-- **Dual PDF Generation**:
-  - Cashier Payment Receipt PDF (`GET /api/payments/:id/receipt-pdf`)
-  - Official GST Tax Invoice PDF (`GET /api/invoices/:id/invoice-pdf`)
+### 5. 💳 Cashier Payments, Receipts & GST Tax Invoicing
+- **Multi-Mode Collections**: UPI / QR, Cash, Debit/Credit Card, Bank Transfer (IMPS/NEFT), and Cheque.
+- **Sequential Cashier Receipts**: Format `REC-YYYY-XXXX` with atomic ledger adjustments.
+- **Official GST Tax Invoice**: Compliant with **SAC 996601** (Passenger Car Rental Services), CGST (9%) + SGST (9%), customer corporate GSTIN validation, and sequential `INV-YYYY-XXXX` numbering.
+- **Security Deposit Ledger**: Active tracking of held deposits, refunded amounts, and damage deductions.
 
-### 6. Executive Operations Dashboard & Analytical Reports
-- **Live Operations Dashboard**: Fleet utilization percentage gauge, today's collections, active deposits held, balance receivables, today's dispatch schedule, and 14-day revenue trend SVG chart.
-- **Analytical Reporting Engine**:
-  - **Revenue & Collections Report**: Filterable by date range and payment mode, with instant **CSV Export**.
-  - **Fleet Performance Report**: Per-vehicle rental days, gross revenue, maintenance spend, net operating profit margin, and **CSV Export**.
-  - **Maintenance Expense Report**: Service records, spare parts replaced, vendors, and **CSV Export**.
-  - **Customer Intelligence Report**: Customer lifetime value (CLV), repeat rental rate (40%), KYC verification status, and **CSV Export**.
-
-### 7. Centralized Master Settings & Policies
-- **Company Profile**: Brand name, legal entity, corporate GSTIN, registered address, and bank remittance information printed on invoices.
-- **Tariff & Rental Policies**: Default security deposit, chauffeur allowance, return grace period, late return hourly penalty, and extra KM charge rate.
-- **Account Credentials**: Staff profile editing and encrypted password changes.
+### 6. 📱 Mobile First & Touch-Optimized UI
+- Responsive design tailored for iOS Safari, Android Chrome, and desktop screens.
+- Mobile bottom touch navigation bar, off-canvas sliding drawer, and touch signature canvas.
 
 ---
 
@@ -65,8 +57,9 @@
 |---|---|
 | **Frontend** | React 18, Vite, TypeScript, Tailwind CSS, React Router v6, Lucide React, HTML5 Canvas |
 | **Backend** | Node.js, Express, TypeScript, Zod, PDFKit, Multer, bcryptjs, jsonwebtoken, cookie-parser |
-| **Database** | SQLite (`file:./dev.db`) for local zero-setup dev; PostgreSQL ready via Prisma ORM |
-| **Testing** | Custom end-to-end integration test runner with 100% test coverage |
+| **AI Engine** | Google Gemini 1.5 Flash REST API + Built-in Local Smart Operations NLP Engine |
+| **Database** | SQLite (`file:./dev.db`) for zero-setup local dev; PostgreSQL ready via Prisma ORM |
+| **Testing** | Custom end-to-end integration test runner with 100% test coverage (31/31 tests passing) |
 
 ---
 
@@ -79,38 +72,37 @@
 ### 1. Clone & Install Dependencies
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/drivepulse.git
-cd drivepulse
+git clone https://github.com/your-username/drivepulse-rentals.git
+cd drivepulse-rentals
 
-# Install root, backend, and frontend dependencies in one command
-npm run install:all
+# Install root dependencies
+npm install
+
+# Install server and client dependencies
+cd server && npm install
+cd ../client && npm install
+cd ..
 ```
 
 ### 2. Environment Configuration
 Create environment files from the provided templates:
 ```bash
-# In the workspace root
-cp .env.example .env
-
-# In the server directory
+# Server configuration
 cp server/.env.example server/.env
 ```
 
-### 3. Initialize Database & Seed Demo Data
+### 3. Initialize Database & Seed Clean State
 ```bash
 cd server
-
-# Generate Prisma client and create SQLite database tables
 npm run prisma:push
-
-# Seed full realistic fleet, users, KYC records, bookings, and payments
 npm run seed
+cd ..
 ```
+*The seed script initializes the exclusive **Admin** account and leaves the fleet, customer, and booking tables 100% clean and ready for live production entry.*
 
 ### 4. Run Development Servers
-From the root directory, start both the Express API and Vite React frontend concurrently:
+From the workspace root, run both backend API and frontend concurrently:
 ```bash
-# From workspace root
 npm run dev
 ```
 
@@ -120,23 +112,17 @@ npm run dev
 
 ---
 
-## 🔑 Default Staff Credentials
-
-The seed script initializes 3 default staff accounts with full demonstration permissions:
+## 🔑 Administrator Credentials
 
 | Role | Email | Password | Scope & Permissions |
 |---|---|---|---|
-| **Super Admin** | `admin@drivepulse.com` | `Password@123` | Full access: Staff user management, system settings, deletions, and overrides |
-| **Manager** | `manager@drivepulse.com` | `Password@123` | Operational access: Compliance document overrides, tariff adjustments, reports |
-| **Staff** | `staff@drivepulse.com` | `Password@123` | Front-desk cashier: Vehicle check-in/out, bookings, customer registration, payments |
-
-> **Quick Login Tip**: The login page includes convenient one-click "Demo Sign-in" buttons for all 3 roles.
+| **Admin** | `admin@drivepulse.com` | `Password@123` | Exclusive root administrator with full access to fleet, bookings, finances, and AI |
 
 ---
 
 ## 🧪 Automated Test Suite
 
-DrivePulse includes an end-to-end integration and API test suite verifying all 7 functional layers:
+DrivePulse includes a comprehensive end-to-end integration test suite verifying all 8 functional layers:
 
 ```bash
 cd server
@@ -144,107 +130,40 @@ npm test
 ```
 
 ### Test Coverage Summary:
-- **Suite 1: Authentication & Session Management**: Health check, login validation, JWT tokens, account lockout, `/auth/me`.
-- **Suite 2: Role-Based Access Control (RBAC)**: Route guards, staff vs manager vs super admin permissions.
-- **Suite 3: Vehicle Fleet & Compliance Engine**: Registry listing, document status evaluation, odometer tracking.
-- **Suite 4: Customer Management & KYC**: KYC document verification, blacklist enforcement banner.
-- **Suite 5: Booking Lifecycle & Financials**: Date overlap prevention, cashier payment receipts (`REC-YYYY-XXXX`), GST tax invoices (`INV-YYYY-XXXX`), PDF generation.
-- **Suite 6: Executive Dashboard & Analytics**: Live fleet metrics, revenue reports, CSV export streaming.
-- **Suite 7: Business Settings & Policies**: Key-value settings persistence, tariff configuration.
+- **Suite 1: Authentication & Session Management**: Health check, login validation, JWT tokens, account lockout, `/auth/me` (5 tests).
+- **Suite 2: Role-Based Access Control (RBAC)**: Route guards, admin permissions (4 tests).
+- **Suite 3: Vehicle Fleet & Compliance Engine**: Registry listing, manual vehicle registration, detail retrieval (2 tests).
+- **Suite 4: Customer Management & KYC**: KYC document verification, customer creation (2 tests).
+- **Suite 5: Booking Lifecycle & Financials**: Date overlap prevention, walk-in customer booking, cashier receipts (`REC-YYYY-XXXX`), GST tax invoices (`INV-YYYY-XXXX`), PDF generation (7 tests).
+- **Suite 6: Executive Dashboard & Analytics**: Live fleet metrics, revenue reports, CSV export streaming (5 tests).
+- **Suite 7: Business Settings & Policies**: Key-value settings persistence, tariff configuration (2 tests).
+- **Suite 8: AI Fleet Copilot & Intelligence**: Live daily briefing, natural language availability query, vehicle status & remaining days, collections summary (4 tests).
 
-**Result**: 28 / 28 Tests Passed (100% Pass Rate).
-
----
-
-## 📑 API Endpoint Summary
-
-### Authentication & Staff Management
-- `POST /api/auth/login` — Sign in and issue httpOnly cookies
-- `POST /api/auth/logout` — Revoke cookies and log logout event
-- `GET /api/auth/me` — Retrieve active session profile
-- `GET /api/users` — List staff accounts (Super Admin only)
-- `POST /api/users` — Create staff account (Super Admin only)
-- `GET /api/audit` — Centralized audit log feed
-
-### Vehicle Fleet & Compliance
-- `GET /api/vehicles` — Paginated fleet directory with compliance status
-- `POST /api/vehicles` — Register vehicle
-- `GET /api/vehicles/:id` — Vehicle detail with documents and service records
-- `POST /api/vehicles/:id/documents` — Upload compliance document (RC, Insurance, PUC)
-- `POST /api/vehicles/:id/maintenance` — Record workshop maintenance service
-
-### Customers & KYC
-- `GET /api/customers` — Customer directory with KYC verification indicators
-- `POST /api/customers` — Register customer
-- `GET /api/customers/:id` — Customer detail with KYC documents
-- `POST /api/customers/:id/documents` — Upload KYC ID proof
-- `PUT /api/customers/:id/blacklist` — Blacklist / unblacklist customer with reason
-
-### Bookings & Inspections
-- `GET /api/bookings/available-vehicles` — Filter vehicles available for date range
-- `GET /api/bookings` — Filterable booking ledger
-- `POST /api/bookings` — Create rental booking with quote calculation
-- `GET /api/bookings/:id` — Booking detail with payment ledger
-- `GET /api/bookings/:id/agreement-pdf` — Download Motor Vehicle Rental Agreement PDF
-- `POST /api/bookings/:bookingId/pickup-inspection` — Record pickup checklist with signature
-- `POST /api/bookings/:bookingId/return-inspection` — Record return checklist with excess KM and fuel charges
-
-### Payments & Invoicing
-- `POST /api/payments` — Record payment, issue `REC-YYYY-XXXX`, and adjust balance
-- `GET /api/payments` — Cashier payment ledger
-- `GET /api/payments/:id/receipt-pdf` — Download official cashier receipt PDF
-- `POST /api/invoices/generate` — Generate official GST Tax Invoice (`INV-YYYY-XXXX`)
-- `GET /api/invoices` — Tax invoice register
-- `GET /api/invoices/:id/pdf` — Download official GST Tax Invoice PDF
-
-### Dashboard, Reports & Settings
-- `GET /api/dashboard/summary` — Live executive fleet & financial metrics
-- `GET /api/reports/revenue` — Collections report (`format=csv` supported)
-- `GET /api/reports/fleet-utilization` — Vehicle utilization report (`format=csv` supported)
-- `GET /api/reports/maintenance` — Maintenance expenditure report (`format=csv` supported)
-- `GET /api/reports/customers` — Customer CLV report (`format=csv` supported)
-- `GET /api/settings` — Get company profile and tariff rules
-- `PUT /api/settings` — Update company settings (Manager / Super Admin)
-- `PUT /api/settings/profile` — Update staff user profile and password
+**Result**: **31 / 31 Tests Passed (100% Pass Rate)**.
 
 ---
 
-### 7. Mobile & Tablet Dual-Optimization Architecture
-- **Responsive Mobile Navigation**: Dedicated off-canvas slide drawer with backdrop blur, dark mode switcher, and staff role badge.
-- **Sticky Mobile Bottom Bar**: Rapid one-thumb access on smartphones (`Dashboard`, `Fleet`, `Bookings`, and prominent `+ Book` action).
-- **Touch Signature Canvas**: High-DPI canvas supporting HTML5 touch events with `touch-action: none` to prevent screen scrolling.
-- **Mobile Floating Quotation Bar**: Dynamic bottom summary in `/bookings/new` showing real-time Total and Balance Due with smooth review triggers.
-- **Responsive Mobile Cards**: Data tables on narrow screens (<768px) automatically adapt into native-feeling touch cards with direct action buttons.
+## 🌐 $0 Free-Tier Production Deployment Guide
+
+Deploy this system online for client demonstrations with zero monthly costs:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│               $0 LIVE PRODUCTION DEMO ARCHITECTURE                     │
+├──────────────────────────────────────┬─────────────────────────────────┤
+│ Frontend (React + Vite + Tailwind)   │ Vercel (Global Edge CDN, HTTPS) │
+│ Backend REST API (Node + Express)    │ Render Web Service (Free Tier)  │
+│ Database (PostgreSQL / SQLite)       │ Neon.tech (Serverless Postgres) │
+│ Invoicing & PDF Receipts             │ In-Memory Built-in PDFKit ($0)  │
+│ SSL / Custom Domain                  │ Free Automatic Let's Encrypt    │
+└──────────────────────────────────────┴─────────────────────────────────┘
+```
+
+1. **Database**: Create a free project at [Neon.tech](https://neon.tech) and copy the PostgreSQL connection string.
+2. **Backend**: Deploy `/server` to [Render.com](https://render.com) as a Free Web Service with `npm install && npm run build && npx prisma db push && npm run seed`.
+3. **Frontend**: Deploy `/client` to [Vercel.com](https://vercel.com) with framework preset `Vite` and `VITE_API_BASE_URL` pointing to your Render URL.
+4. **Single-Service Monolith Option**: Deploy repository root directly on Render with `npm run build && npm start`. Express will serve both the React web app and REST API on a single URL (`https://drivepulse.onrender.com`), eliminating CORS and cross-domain cookies!
 
 ---
 
-## 🔒 Zero-Cost ($0) Production Deployment for Client Testing
-
-To allow clients and stakeholders to test DrivePulse live on their **mobile phones and desktop browsers at $0 cost** with **no credit card required**:
-
-1. **Free PostgreSQL Database (Neon.tech)**:
-   - Create a free project at [Neon.tech](https://neon.tech) (0.5 GB SSD storage, serverless autoscaling, SSL included).
-   - Copy connection string to `DATABASE_URL`.
-2. **Free Backend REST API (Render.com)**:
-   - Create a free Web Service at [Render.com](https://render.com) from your GitHub repo (`root: server`).
-   - Build Command: `npm install && npm run build && npx prisma db push && npm run seed`
-   - Start Command: `npm start`
-   - Instance: Free (750 free hours/month, automated SSL: `https://your-api.onrender.com`).
-3. **Free Frontend SPA (Vercel.com)**:
-   - Import your GitHub repo on [Vercel.com](https://vercel.com) (`root: client`, framework: Vite).
-   - Set environment variable: `VITE_API_BASE_URL=https://your-api.onrender.com`.
-   - Free Edge CDN with custom domain or `https://your-app.vercel.app`.
-4. **Live Verification**:
-   - Total Cost: **$0.00 / month**.
-   - Client can log in with default staff accounts (`admin@drivepulse.com` / `Password@123`), create bookings on mobile, inspect vehicles with digital touch signatures, and download official 18% GST tax invoices.
-
----
-
-## 📄 Documentation & PDF Guides
-- **System Architecture & Workflow Guide**: See [`SYSTEM_WORKFLOW_AND_ARCHITECTURE_GUIDE.md`](./SYSTEM_WORKFLOW_AND_ARCHITECTURE_GUIDE.md)
-- **Official Client Workflow PDF**: See [`DrivePulse_System_Workflow_Guide.pdf`](./DrivePulse_System_Workflow_Guide.pdf)
-
----
-
-## 📄 License
-DrivePulse is licensed under the MIT License.
+*DrivePulse — Engineered for reliability, compliance, mobile excellence, and effortless client demonstrations.*

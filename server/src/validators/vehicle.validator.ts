@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FuelType, Transmission, VehicleStatus, DocumentType } from '../types';
+import { FuelType, Transmission, VehicleStatus, DocumentType, VehicleType } from '../types';
 
 export const createVehicleSchema = z.object({
   registrationNumber: z
@@ -11,9 +11,10 @@ export const createVehicleSchema = z.object({
   variant: z.string().optional().nullable(),
   year: z.coerce.number().int().min(1990).max(new Date().getFullYear() + 1),
   color: z.string().min(1, 'Color is required'),
+  type: z.nativeEnum(VehicleType).default(VehicleType.CAR),
   fuelType: z.nativeEnum(FuelType).default(FuelType.Petrol),
   transmission: z.nativeEnum(Transmission).default(Transmission.Manual),
-  seats: z.coerce.number().int().min(2).max(15).default(5),
+  seats: z.coerce.number().int().min(1).max(15).default(2),
   chassisNumber: z.string().min(4, 'Chassis number is required').transform((v) => v.toUpperCase()),
   engineNumber: z.string().min(4, 'Engine number is required').transform((v) => v.toUpperCase()),
   odometer: z.coerce.number().int().min(0).default(0),
